@@ -1,0 +1,6 @@
+@VuSaniClientApi_HostAddress = http://localhost:5254
+
+GET {{VuSaniClientApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
