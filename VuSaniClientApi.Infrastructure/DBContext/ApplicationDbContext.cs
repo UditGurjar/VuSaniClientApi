@@ -17,6 +17,7 @@ namespace VuSaniClientApi.Infrastructure.DBContext
         public DbSet<Licence> Licences { get; set; }
         public DbSet<Responsibility> Responsibilities { get; set; }
         public DbSet<HighestQualification> HighestQualifications { get; set; }
+        public DbSet<RoleResponsibility> RoleResponsibilities { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -26,7 +27,18 @@ namespace VuSaniClientApi.Infrastructure.DBContext
                 .WithMany(o => o.Children)
                 .HasForeignKey(o => o.ParentId)
                 .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<RoleResponsibility>()
+      .HasKey(rr => new { rr.RoleId, rr.ResponsibilityId });
 
+            modelBuilder.Entity<RoleResponsibility>()
+                .HasOne(rr => rr.Role)
+                .WithMany(r => r.RoleResponsibilities)
+                .HasForeignKey(rr => rr.RoleId);
+
+            modelBuilder.Entity<RoleResponsibility>()
+                .HasOne(rr => rr.Responsibility)
+                .WithMany(r => r.RoleResponsibilities)
+                .HasForeignKey(rr => rr.ResponsibilityId);
             // ✅ -------- DUMMY DATA SEEDING --------
             modelBuilder.Entity<Organization>().HasData(
 
@@ -96,6 +108,178 @@ namespace VuSaniClientApi.Infrastructure.DBContext
                     BusinessAddress = "65 Garden Road"
                 }
             );
+
+            modelBuilder.Entity<HighestQualification>().HasData(
+
+        new HighestQualification
+        {
+            Id = 1,
+            Name = "General Education and Training Certificate (GETC)",
+            Description = "<p>NQF Level 1: Typically awarded after ...</p>",
+            Organization = "[3,2,1]",
+            Deleted = 0,
+            CreatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            CreatedBy = 1,
+            UpdatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            UpdatedBy = 1,
+            UniqueId = "H&HG/SKI/2425/0001"
+        },
+
+        new HighestQualification
+        {
+            Id = 2,
+            Name = "National Senior Certificate (NSC)",
+            Description = "<p>NQF Level 4: Also known as the matric...</p>",
+            Organization = "[3,2,1]",
+            Deleted = 0,
+            CreatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            CreatedBy = 1,
+            UpdatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            UpdatedBy = 1,
+            UniqueId = "H&HG/SKI/2425/0002"
+        },
+
+        new HighestQualification
+        {
+            Id = 3,
+            Name = "Higher Certificate",
+            Description = "NQF Level 5: A one-year vocational or occupational...",
+            Organization = "[1]",
+            Deleted = 0,
+            CreatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            CreatedBy = 1,
+            UpdatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            UpdatedBy = null,
+            UniqueId = "H&HG/SKI/2425/0003"
+        },
+
+        new HighestQualification
+        {
+            Id = 4,
+            Name = "Advanced Certificate",
+            Description = "NQF Level 6: Builds on a Higher Certificate or Dip...",
+            Organization = "[1]",
+            Deleted = 0,
+            CreatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            CreatedBy = 1,
+            UpdatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            UpdatedBy = null,
+            UniqueId = "H&HG/SKI/2425/0004"
+        },
+
+        new HighestQualification
+        {
+            Id = 5,
+            Name = "National Certificate (Vocational) – NC(V)",
+            Description = "<p>NQF Levels 2–4: Technical and ...</p>",
+            Organization = "[3,2,1]",
+            Deleted = 0,
+            CreatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            CreatedBy = 1,
+            UpdatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            UpdatedBy = 1,
+            UniqueId = "H&HG/SKI/2425/0005"
+        },
+
+        new HighestQualification
+        {
+            Id = 6,
+            Name = "Diploma",
+            Description = "<p>NQF Level 6: Typically a 2–3 y...</p>",
+            Organization = "[3,2,1]",
+            Deleted = 0,
+            CreatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            CreatedBy = 1,
+            UpdatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            UpdatedBy = 1,
+            UniqueId = "H&HG/SKI/2425/0006"
+        },
+
+        new HighestQualification
+        {
+            Id = 7,
+            Name = "Advanced Diploma",
+            Description = "<p>NQF Level 7: Post-diploma qualificati...</p>",
+            Organization = "[3,2,1]",
+            Deleted = 0,
+            CreatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            CreatedBy = 1,
+            UpdatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            UpdatedBy = 1,
+            UniqueId = "H&HG/SKI/2425/0007"
+        },
+
+        new HighestQualification
+        {
+            Id = 8,
+            Name = "Bachelor’s Degree",
+            Description = "<p>NQF Level 7: A 3–4 year underg...</p>",
+            Organization = "[3,2,1]",
+            Deleted = 0,
+            CreatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            CreatedBy = 1,
+            UpdatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            UpdatedBy = 1,
+            UniqueId = "H&HG/SKI/2425/0008"
+        },
+
+        new HighestQualification
+        {
+            Id = 9,
+            Name = "Bachelor Honours Degree",
+            Description = "<p>NQF Level 8: A postgraduate year of s...</p>",
+            Organization = "[3,2,1]",
+            Deleted = 0,
+            CreatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            CreatedBy = 1,
+            UpdatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            UpdatedBy = 1,
+            UniqueId = "H&HG/SKI/2425/0009"
+        },
+
+        new HighestQualification
+        {
+            Id = 10,
+            Name = "Postgraduate Diploma",
+            Description = "<p>NQF Level 8: A vocational or professi...</p>",
+            Organization = "[3,2,1]",
+            Deleted = 0,
+            CreatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            CreatedBy = 1,
+            UpdatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            UpdatedBy = 1,
+            UniqueId = "H&HG/SKI/2425/0010"
+        },
+
+        new HighestQualification
+        {
+            Id = 11,
+            Name = "Master’s Degree",
+            Description = "<p>NQF Level 9: A postgraduate academic ...</p>",
+            Organization = "[3,2,1]",
+            Deleted = 0,
+            CreatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            CreatedBy = 1,
+            UpdatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            UpdatedBy = 1,
+            UniqueId = "H&HG/SKI/2425/0011"
+        },
+
+        new HighestQualification
+        {
+            Id = 12,
+            Name = "Doctoral Degree (PhD or DTech)",
+            Description = "<p>NQF Level 10: The highest academic qu...</p>",
+            Organization = "[3,2,1]",
+            Deleted = 0,
+            CreatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            CreatedBy = 1,
+            UpdatedAt = new DateTime(2025, 8, 11, 10, 03, 27),
+            UpdatedBy = 1,
+            UniqueId = "H&HG/SKI/2425/0012"
+        }
+    );
+
             var hashedPassword = PasswordHelper.ComputeHash("Super@123", "SHA1", null);
 
             modelBuilder.Entity<User>().HasData(new User
@@ -120,7 +304,7 @@ namespace VuSaniClientApi.Infrastructure.DBContext
                 EmployeeType = "Permanent Employment",
                 NameOfQualification = "Graduation",
 
-                Role = 131059,
+                RoleId = 1,
                 Department = 939,
                 MyOrganization = 204,
 
@@ -142,6 +326,50 @@ namespace VuSaniClientApi.Infrastructure.DBContext
                 ClientInternalId = "H&H-CL-1015",
                 UnifiedUserUiqueId = "UIH-1052"
             });
+
+
+            //add responsibility
+             modelBuilder.Entity<Responsibility>().HasData(
+        new Responsibility
+        {
+            Id = 1,
+            Name = "Technical Issues",
+            Description = "<p>Technical Issues</p>",
+            Organization = "[1]",
+            CreatedAt = new DateTime(2025, 8, 11, 10, 22, 20),
+            CreatedBy = 1,
+            UpdatedAt = new DateTime(2025, 8, 11, 10, 22, 20),
+            UpdatedBy = 1,
+            Deleted = 0,
+            UniqueId = "HAM/R/2526/001"
+        },
+        new Responsibility
+        {
+            Id = 2,
+            Name = "Technical Issue Management",
+            Description = "<p>Taking care of technical matters of t...</p>",
+            Organization = "[1]",
+            CreatedAt = new DateTime(2025, 8, 11, 10, 43, 28),
+            CreatedBy = 1,
+            UpdatedAt = new DateTime(2025, 8, 11, 10, 43, 28),
+            UpdatedBy = 1,
+            Deleted = 0,
+            UniqueId = "HAM/R/2526/002"
+        },
+        new Responsibility
+        {
+            Id = 3,
+            Name = "Strategic HR Leadership",
+            Description = "<p>Develops and implements HR strategies...</p>",
+            Organization = "[1]",
+            CreatedAt = new DateTime(2025, 8, 13, 20, 02, 55),
+            CreatedBy = 1,
+            UpdatedAt = new DateTime(2025, 8, 13, 20, 02, 55),
+            UpdatedBy = null,
+            Deleted = 0,
+            UniqueId = "HAM/R/2526/003"
+        }
+    );
             base.OnModelCreating(modelBuilder);
         }
     }

@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace VuSaniClientApi.Models.DBModels
 {
-    [Table("role_hierarchy")]
     public class RoleHierarchy
     {
         [Key]

@@ -21,7 +21,10 @@ namespace VuSaniClientApi.Models.DBModels
 
         public string? Description { get; set; }
 
-        public string? Organization { get; set; }
+        public int? OrganizationId { get; set; }
+        [ForeignKey(nameof(OrganizationId))]
+
+        public Organization? Organization { get; set; }
 
         public string? Responsibilities { get; set; }
 
@@ -61,5 +64,7 @@ namespace VuSaniClientApi.Models.DBModels
 
         [StringLength(250)]
         public string? UniqueId { get; set; }
+        // Proper many-to-many navigation
+        public ICollection<RoleResponsibility> RoleResponsibilities { get; set; } = new List<RoleResponsibility>();
     }
 }

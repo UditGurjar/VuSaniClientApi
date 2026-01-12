@@ -51,7 +51,10 @@ namespace VuSaniClientApi.Models.DBModels
         [StringLength(255)]
         public string? EmployeeType { get; set; }
 
-        public int? HighestQualification { get; set; }
+        public int? HighestQualificationId { get; set; }
+        [ForeignKey(nameof(HighestQualificationId))]
+        public HighestQualification? HighestQualification { get; set; }
+
 
         [StringLength(255)]
         public string? NameOfQualification { get; set; }
@@ -60,7 +63,9 @@ namespace VuSaniClientApi.Models.DBModels
         public int? State { get; set; }
         public int? City { get; set; }
 
-        public int? Role { get; set; }
+        public int? RoleId { get; set; }
+        [ForeignKey(nameof(RoleId))]
+        public Role? Role { get; set; }
         public string? RoleDesc { get; set; }
 
         [StringLength(255)]
