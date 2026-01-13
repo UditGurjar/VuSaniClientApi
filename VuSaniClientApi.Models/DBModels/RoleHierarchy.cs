@@ -40,5 +40,7 @@ namespace VuSaniClientApi.Models.DBModels
 
         [StringLength(250)]
         public string? UniqueId { get; set; }
+        public ICollection<OrganizationRoleHierarchy> OrganizationRoleHierarchies { get; set; } = new List<OrganizationRoleHierarchy>();
+
     }
 }

@@ -42,5 +42,6 @@ namespace VuSaniClientApi.Models.DBModels
 
         [StringLength(255)]
         public string? UniqueId { get; set; }
+
     }
 }

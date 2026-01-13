@@ -2,6 +2,9 @@
 using Serilog;
 using Serilog.Events;
 using System.Text.Json.Serialization;
+using VuSaniClientApi.Application;
+using VuSaniClientApi.Authentication;
+using VuSaniClientApi.Infrastructure;
 using VuSaniClientApi.Infrastructure.DBContext;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,7 +18,7 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 // Add services to the container.
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("VSaniClientCon")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("VsaniDbCon")));
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -27,6 +30,9 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddApplicationServices();
+builder.Services.AddInfrastructureServices();
+builder.Services.RegisterJwtAuthentication(builder.Configuration);
 
 // ✅ Configure CORS for Angular (default port 4200)
 builder.Services.AddCors(options =>

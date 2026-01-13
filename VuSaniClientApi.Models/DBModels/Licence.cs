@@ -35,5 +35,7 @@ namespace VuSaniClientApi.Models.DBModels
 
         [StringLength(100)]
         public string? UniqueId { get; set; }
+        public ICollection<OrganizationLicence> OrganizationLicences { get; set; } = new List<OrganizationLicence>();
+
     }
 }

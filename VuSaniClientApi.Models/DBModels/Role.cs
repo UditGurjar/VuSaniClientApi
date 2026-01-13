@@ -64,7 +64,5 @@ namespace VuSaniClientApi.Models.DBModels
 
         [StringLength(250)]
         public string? UniqueId { get; set; }
-        // Proper many-to-many navigation
-        public ICollection<RoleResponsibility> RoleResponsibilities { get; set; } = new List<RoleResponsibility>();
     }
 }

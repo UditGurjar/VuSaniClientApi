@@ -41,12 +41,17 @@ namespace VuSaniClientApi.Models.DBModels
         public DateTime? JoiningDate { get; set; }
         public DateTime? EndDate { get; set; }
 
-        public int? Gender { get; set; }
+        public int? GenderId { get; set; }
 
+        [ForeignKey(nameof(GenderId))]
+        public Gender? Gender { get; set; }
         public string? Disability { get; set; }
 
-        [StringLength(255)]
-        public string? Race { get; set; }
+        public int? RaceId { get; set; }
+
+        [ForeignKey(nameof(RaceId))]
+        public Race? RaceInfo { get; set; }
+
 
         [StringLength(255)]
         public string? EmployeeType { get; set; }
@@ -59,9 +64,17 @@ namespace VuSaniClientApi.Models.DBModels
         [StringLength(255)]
         public string? NameOfQualification { get; set; }
 
-        public int? Country { get; set; }
-        public int? State { get; set; }
-        public int? City { get; set; }
+        public int? CountryId { get; set; }
+        [ForeignKey(nameof(CountryId))]
+        public Country? Country { get; set; }
+
+        public int? StateId { get; set; }
+        [ForeignKey(nameof(StateId))]
+        public State? State { get; set; }
+
+        public int? CityId { get; set; }
+        [ForeignKey(nameof(CityId))]
+        public City? City { get; set; }
 
         public int? RoleId { get; set; }
         [ForeignKey(nameof(RoleId))]
@@ -82,7 +95,9 @@ namespace VuSaniClientApi.Models.DBModels
 
         public int? MyOrganization { get; set; }
 
-        public string? Organization { get; set; }
+        public int? OrganizationId { get; set; }
+        [ForeignKey(nameof(OrganizationId))]
+        public Organization? Organization { get; set; }
         public string? Permission { get; set; }
 
         public int? SpecialPermission { get; set; } = 0;
@@ -164,15 +179,20 @@ namespace VuSaniClientApi.Models.DBModels
 
         public DateTime? DateOfBirth { get; set; }
 
-        public int? Language { get; set; }
+        public int? LanguageId { get; set; }
+
+        [ForeignKey(nameof(LanguageId))]
+        public Language? Language { get; set; }
 
         [StringLength(3)]
-        public string? PersonWithDisabilities { get; set; } // Yes / No
+        public string? PersonWithDisabilities { get; set; } 
 
         [StringLength(500)]
         public string? CurrentAddress { get; set; }
 
-        public string? EmergencyContactDetails { get; set; }
+        public int? NextOfKinId { get; set; }
+        [ForeignKey(nameof(NextOfKinId))]
+        public NextOfKin? NextOfKin { get; set; }
 
         [StringLength(255)]
         public string? EmploymentType { get; set; }
@@ -210,10 +230,7 @@ namespace VuSaniClientApi.Models.DBModels
         public int? NonConformance { get; set; }
         public int? Risk { get; set; }
 
-        [StringLength(255)]
-        public string? ClientInternalId { get; set; }
-
-        public int? TeamId { get; set; }
+    
 
         [StringLength(255)]
         public string? UnifiedUserUiqueId { get; set; }
