@@ -14,11 +14,11 @@ namespace VuSaniClientApi.Models.DBModels
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [StringLength(150)]
         public string? Name { get; set; }
 
-        [StringLength(10)]
-        public string? Code { get; set; }   // IN, ZA, US etc.
+        public string? PhoneCode { get; set; }  
+        public string? EmojiU { get; set; }  
+        public string? Native { get; set; }  
 
         public ICollection<State>? States { get; set; }
     }

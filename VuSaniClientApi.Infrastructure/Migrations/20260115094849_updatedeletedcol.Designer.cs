@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VuSaniClientApi.Infrastructure.DBContext;
 
@@ -11,9 +12,11 @@ using VuSaniClientApi.Infrastructure.DBContext;
 namespace VuSaniClientApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260115094849_updatedeletedcol")]
+    partial class updatedeletedcol
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -152,20 +155,20 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2296),
+                            CreatedAt = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(1022),
                             CreatedBy = 1,
                             Deleted = false,
                             DepartmentHead = 1,
                             Name = "Devs",
                             OrganizationId = 1,
                             UniqueId = "HAM/D/2526/001",
-                            UpdatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2297),
+                            UpdatedAt = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(1023),
                             UpdatedBy = 1
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2301),
+                            CreatedAt = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(1026),
                             CreatedBy = 1,
                             Deleted = false,
                             DepartmentHead = 1,
@@ -174,13 +177,13 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             OrganizationId = 1,
                             ParentDepartment = 1,
                             UniqueId = "HAM/AT/2526/001",
-                            UpdatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2302),
+                            UpdatedAt = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(1027),
                             UpdatedBy = 1
                         },
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2306),
+                            CreatedAt = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(1029),
                             CreatedBy = 1,
                             Deleted = false,
                             DepartmentHead = 1,
@@ -189,13 +192,13 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             OrganizationId = 1,
                             ParentDepartment = 2,
                             UniqueId = "HAM/AT/2526/001",
-                            UpdatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2307),
+                            UpdatedAt = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(1030),
                             UpdatedBy = 1
                         },
                         new
                         {
                             Id = 4,
-                            CreatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2310),
+                            CreatedAt = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(1032),
                             CreatedBy = 1,
                             Deleted = false,
                             DepartmentHead = 1,
@@ -204,13 +207,13 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             OrganizationId = 1,
                             ParentDepartment = 1,
                             UniqueId = "HAM/AT/2526/001",
-                            UpdatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2310),
+                            UpdatedAt = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(1033),
                             UpdatedBy = 1
                         },
                         new
                         {
                             Id = 5,
-                            CreatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2313),
+                            CreatedAt = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(1035),
                             CreatedBy = 1,
                             Deleted = false,
                             DepartmentHead = 1,
@@ -219,7 +222,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             OrganizationId = 1,
                             ParentDepartment = 1,
                             UniqueId = "HAM/AT/2526/001",
-                            UpdatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2314),
+                            UpdatedAt = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(1036),
                             UpdatedBy = 1
                         });
                 });
@@ -1622,22 +1625,22 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2804),
+                            CreatedAt = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(1446),
                             Deleted = false,
                             Name = "Technical Support and Resolution",
                             OrganizationId = 1,
                             UniqueId = "HAM/ROL/2526/002",
-                            UpdatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2804)
+                            UpdatedAt = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(1446)
                         },
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2806),
+                            CreatedAt = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(1448),
                             Deleted = false,
                             Name = "Managing Director",
                             OrganizationId = 1,
                             UniqueId = "HAM/ROL/2526/003",
-                            UpdatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2806)
+                            UpdatedAt = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(1448)
                         });
                 });
 
@@ -2337,23 +2340,23 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Accountability = "[{\"accountability\":\"Accountability asdkfjhaklsdfas...\"}]",
                             CityId = 108956,
                             CountryId = 205,
-                            CreatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(4272),
+                            CreatedAt = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(2611),
                             CreatedBy = 1,
                             Deleted = false,
                             Department = 1,
-                            Email = "mirriam@harmonyandmotors.com",
+                            Email = "learn@hhacademy.africa",
                             EmployeeTypeId = 11,
-                            EndDate = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(4262),
+                            EndDate = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(2602),
                             HighestQualificationId = 1,
                             IdNumber = "95021228928288",
                             IsSuperAdmin = 1,
-                            JoiningDate = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(4261),
-                            MyOrganization = 1,
+                            JoiningDate = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(2601),
+                            MyOrganization = 204,
                             Name = "Mirriam",
                             NameOfQualification = "Graduation",
-                            OrganizationAccess = "[1,2,3]",
+                            OrganizationAccess = "[205]",
                             OrganizationId = 1,
-                            Password = "ZpEZ+Jq3B4+Am2EnpxJWcN2DJMDA2O5j",
+                            Password = "BkTum+CMyO6ZLuhmGR1THWtHgOkB44hU",
                             Permission = "[{\"sidebarId\":1,\"permissions\":{\"1\":{\"view\":true}}}]",
                             Profile = "profile/1717141951646_download.jfif",
                             RaceId = 1,
@@ -2365,7 +2368,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             UnifiedUserUiqueId = "UIH-1052",
                             UniqueId = "SR0001",
                             UniqueIdStatus = "automatic",
-                            UpdatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(4273),
+                            UpdatedAt = new DateTime(2026, 1, 15, 9, 48, 48, 90, DateTimeKind.Utc).AddTicks(2612),
                             UpdatedBy = 1,
                             ViewType = "all"
                         });

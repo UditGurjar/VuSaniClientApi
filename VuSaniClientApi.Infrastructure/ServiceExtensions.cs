@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VuSaniClientApi.Infrastructure.GenericRepository;
+using VuSaniClientApi.Infrastructure.Repositories.LoginRepository;
 
 namespace VuSaniClientApi.Infrastructure
 {
@@ -13,7 +14,8 @@ namespace VuSaniClientApi.Infrastructure
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
         {
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-          
+            services.AddScoped<ILoginRepository, LoginRepository>();
+
             return services;
         }
     }

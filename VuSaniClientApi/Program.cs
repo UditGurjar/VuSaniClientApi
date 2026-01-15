@@ -51,7 +51,25 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+// ✅ Auto apply EF Core migrations on startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    try
+    {
+        await db.Database.MigrateAsync();
+        Log.Information("Database migration completed successfully");
+    }
+    catch (Exception ex)
+    {
+        Log.Fatal(ex, "Database migration failed");
+        throw;
+    }
+}
+app.UseStaticFiles();
+
 app.UseHttpsRedirection();
+app.UseCors("AllowReactApp");   // ✅ ADD THIS LINE
 
 app.UseAuthorization();
 

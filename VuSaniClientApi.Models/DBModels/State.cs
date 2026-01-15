@@ -14,8 +14,8 @@ namespace VuSaniClientApi.Models.DBModels
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [StringLength(150)]
         public string? Name { get; set; }
+        public string? StateCode { get; set; }
 
         public int CountryId { get; set; }
 

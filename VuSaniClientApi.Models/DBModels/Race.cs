@@ -16,7 +16,6 @@ namespace VuSaniClientApi.Models.DBModels
 
         [StringLength(100)]
         public string Name { get; set; } = null!;
-        // Example: African, White, Coloured, Indian/Asian, Other
 
         public ICollection<User>? Users { get; set; }
     }

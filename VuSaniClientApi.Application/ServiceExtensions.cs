@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VuSaniClientApi.Application.Services.LoginService;
 
 namespace VuSaniClientApi.Application
 {
@@ -11,7 +12,7 @@ namespace VuSaniClientApi.Application
     {
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-          
+            services.AddScoped<ILoginService, LoginService>();
             return services;
         }
     }

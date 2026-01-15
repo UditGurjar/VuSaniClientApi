@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VuSaniClientApi.Infrastructure.DBContext;
 
@@ -11,9 +12,11 @@ using VuSaniClientApi.Infrastructure.DBContext;
 namespace VuSaniClientApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260115065030_SeedDataInitial")]
+    partial class SeedDataInitial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -152,20 +155,20 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                         new
                         {
                             Id = 1,
-                            CreatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2296),
+                            CreatedAt = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(1983),
                             CreatedBy = 1,
                             Deleted = false,
                             DepartmentHead = 1,
                             Name = "Devs",
                             OrganizationId = 1,
                             UniqueId = "HAM/D/2526/001",
-                            UpdatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2297),
+                            UpdatedAt = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(1985),
                             UpdatedBy = 1
                         },
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2301),
+                            CreatedAt = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(1989),
                             CreatedBy = 1,
                             Deleted = false,
                             DepartmentHead = 1,
@@ -174,13 +177,13 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             OrganizationId = 1,
                             ParentDepartment = 1,
                             UniqueId = "HAM/AT/2526/001",
-                            UpdatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2302),
+                            UpdatedAt = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(1991),
                             UpdatedBy = 1
                         },
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2306),
+                            CreatedAt = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(1995),
                             CreatedBy = 1,
                             Deleted = false,
                             DepartmentHead = 1,
@@ -189,13 +192,13 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             OrganizationId = 1,
                             ParentDepartment = 2,
                             UniqueId = "HAM/AT/2526/001",
-                            UpdatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2307),
+                            UpdatedAt = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(1996),
                             UpdatedBy = 1
                         },
                         new
                         {
                             Id = 4,
-                            CreatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2310),
+                            CreatedAt = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(2000),
                             CreatedBy = 1,
                             Deleted = false,
                             DepartmentHead = 1,
@@ -204,13 +207,13 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             OrganizationId = 1,
                             ParentDepartment = 1,
                             UniqueId = "HAM/AT/2526/001",
-                            UpdatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2310),
+                            UpdatedAt = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(2001),
                             UpdatedBy = 1
                         },
                         new
                         {
                             Id = 5,
-                            CreatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2313),
+                            CreatedAt = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(2004),
                             CreatedBy = 1,
                             Deleted = false,
                             DepartmentHead = 1,
@@ -219,7 +222,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             OrganizationId = 1,
                             ParentDepartment = 1,
                             UniqueId = "HAM/AT/2526/001",
-                            UpdatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2314),
+                            UpdatedAt = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(2005),
                             UpdatedBy = 1
                         });
                 });
@@ -495,8 +498,8 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("Deleted")
-                        .HasColumnType("bit");
+                    b.Property<int?>("Deleted")
+                        .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -528,7 +531,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 1,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 27, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "<p>NQF Level 1: Typically awarded after ...</p>",
                             Name = "General Education and Training Certificate (GETC)",
                             UniqueId = "H&HG/SKI/2425/0001",
@@ -540,7 +543,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 2,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 27, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "<p>NQF Level 4: Also known as the matric...</p>",
                             Name = "National Senior Certificate (NSC)",
                             UniqueId = "H&HG/SKI/2425/0002",
@@ -552,7 +555,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 3,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 27, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "NQF Level 5: A one-year vocational or occupational...",
                             Name = "Higher Certificate",
                             UniqueId = "H&HG/SKI/2425/0003",
@@ -563,7 +566,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 4,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 27, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "NQF Level 6: Builds on a Higher Certificate or Dip...",
                             Name = "Advanced Certificate",
                             UniqueId = "H&HG/SKI/2425/0004",
@@ -574,7 +577,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 5,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 27, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "<p>NQF Levels 2–4: Technical and ...</p>",
                             Name = "National Certificate (Vocational) – NC(V)",
                             UniqueId = "H&HG/SKI/2425/0005",
@@ -586,7 +589,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 6,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 27, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "<p>NQF Level 6: Typically a 2–3 y...</p>",
                             Name = "Diploma",
                             UniqueId = "H&HG/SKI/2425/0006",
@@ -598,7 +601,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 7,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 27, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "<p>NQF Level 7: Post-diploma qualificati...</p>",
                             Name = "Advanced Diploma",
                             UniqueId = "H&HG/SKI/2425/0007",
@@ -610,7 +613,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 8,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 27, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "<p>NQF Level 7: A 3–4 year underg...</p>",
                             Name = "Bachelor’s Degree",
                             UniqueId = "H&HG/SKI/2425/0008",
@@ -622,7 +625,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 9,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 27, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "<p>NQF Level 8: A postgraduate year of s...</p>",
                             Name = "Bachelor Honours Degree",
                             UniqueId = "H&HG/SKI/2425/0009",
@@ -634,7 +637,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 10,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 27, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "<p>NQF Level 8: A vocational or professi...</p>",
                             Name = "Postgraduate Diploma",
                             UniqueId = "H&HG/SKI/2425/0010",
@@ -646,7 +649,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 11,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 27, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "<p>NQF Level 9: A postgraduate academic ...</p>",
                             Name = "Master’s Degree",
                             UniqueId = "H&HG/SKI/2425/0011",
@@ -658,7 +661,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 12,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 27, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "<p>NQF Level 10: The highest academic qu...</p>",
                             Name = "Doctoral Degree (PhD or DTech)",
                             UniqueId = "H&HG/SKI/2425/0012",
@@ -766,8 +769,8 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("Deleted")
-                        .HasColumnType("bit");
+                    b.Property<int?>("Deleted")
+                        .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -802,7 +805,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 1,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 29, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "<p>Proof that products or systems comply...",
                             IsStatic = 0,
                             Name = "SANS Compliance Certificate",
@@ -815,7 +818,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 2,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 29, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "<p>SAQA-accredited certificate for occup...",
                             IsStatic = 0,
                             Name = "Occupational Certificate",
@@ -828,7 +831,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 3,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 29, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "<p>Good Manufacturing Practice certifica...",
                             IsStatic = 0,
                             Name = "GMP Certificate",
@@ -903,8 +906,8 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("Deleted")
-                        .HasColumnType("bit");
+                    b.Property<int?>("Deleted")
+                        .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -958,7 +961,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             BusinessLogo = "https://saapi.vusani360.africa/main_logo.png",
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 30, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "<p>Corporate Office</p>",
                             FontSize = "16",
                             FooterImage = "https://saapi.vusani360.africa/main_logo.png",
@@ -978,7 +981,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             BusinessLogo = "https://harmonyandmotors-api.vusani360.africa/org1.png",
                             CreatedAt = new DateTime(2025, 8, 13, 20, 41, 7, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "<p>Property Division</p>",
                             FontSize = "16",
                             FooterImage = "https://harmonyandmotors-api.vusani360.africa/org1.png",
@@ -999,7 +1002,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             BusinessLogo = "https://harmonyandmotors-api.vusani360.africa/org2.png",
                             CreatedAt = new DateTime(2025, 8, 18, 17, 17, 1, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "<p>Academy division</p>",
                             FontSize = "16",
                             FooterImage = "https://harmonyandmotors-api.vusani360.africa/org2.png",
@@ -1533,8 +1536,8 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("Deleted")
-                        .HasColumnType("bit");
+                    b.Property<int?>("Deleted")
+                        .HasColumnType("int");
 
                     b.Property<int?>("Department")
                         .HasColumnType("int");
@@ -1612,7 +1615,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 1,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 23, 3, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "<p>Administrator</p>",
                             Name = "Administrator",
                             OrganizationId = 1,
@@ -1622,22 +1625,22 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                         new
                         {
                             Id = 2,
-                            CreatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2804),
-                            Deleted = false,
+                            CreatedAt = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(3676),
+                             
                             Name = "Technical Support and Resolution",
                             OrganizationId = 1,
                             UniqueId = "HAM/ROL/2526/002",
-                            UpdatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2804)
+                            UpdatedAt = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(3676)
                         },
                         new
                         {
                             Id = 3,
-                            CreatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2806),
-                            Deleted = false,
+                            CreatedAt = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(3679),
+                             
                             Name = "Managing Director",
                             OrganizationId = 1,
                             UniqueId = "HAM/ROL/2526/003",
-                            UpdatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(2806)
+                            UpdatedAt = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(3680)
                         });
                 });
 
@@ -1655,8 +1658,8 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("Deleted")
-                        .HasColumnType("bit");
+                    b.Property<int?>("Deleted")
+                        .HasColumnType("int");
 
                     b.Property<int?>("Department")
                         .HasColumnType("int");
@@ -1698,7 +1701,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 1,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 32, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "Elected group responsible for governance...",
                             Editable = 1,
                             Level = "Corporate/Executive Level",
@@ -1713,7 +1716,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 2,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 32, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "Leads the board, ensures board effectiveness...",
                             Editable = 1,
                             Level = "Corporate/Executive Level",
@@ -1728,7 +1731,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 3,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 32, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "Highest-ranking executive managing overall operations...",
                             Editable = 1,
                             Level = "Corporate/Executive Level",
@@ -1743,7 +1746,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 4,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 32, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "Sometimes separate from CEO; handles strategic leadership...",
                             Editable = 1,
                             Level = "Corporate/Executive Level",
@@ -1758,7 +1761,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 5,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 32, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             Description = "Manages day-to-day operations and strategy execution...",
                             Editable = 1,
                             Level = "Corporate/Executive Level",
@@ -1784,8 +1787,8 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                     b.Property<int?>("CreatedBy")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("Deleted")
-                        .HasColumnType("bit");
+                    b.Property<int?>("Deleted")
+                        .HasColumnType("int");
 
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
@@ -1827,7 +1830,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 1,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 33, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             IsStatic = 1,
                             Name = "Communication Skills",
                             Organization = "[1]",
@@ -1840,7 +1843,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 2,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 33, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             IsStatic = 1,
                             Name = "Problem-solving",
                             Organization = "[1]",
@@ -1853,7 +1856,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 3,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 33, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             IsStatic = 1,
                             Name = "Critical thinking",
                             Organization = "[1]",
@@ -1866,7 +1869,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 4,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 33, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             IsStatic = 1,
                             Name = "Time management",
                             Organization = "[1]",
@@ -1879,7 +1882,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 5,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 33, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             IsStatic = 1,
                             Name = "Adaptability",
                             Organization = "[1]",
@@ -1892,7 +1895,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 6,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 33, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             IsStatic = 1,
                             Name = "Collaboration",
                             Organization = "[1]",
@@ -1905,7 +1908,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 7,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 33, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             IsStatic = 1,
                             Name = "Emotional Intelligence",
                             Organization = "[1]",
@@ -1918,7 +1921,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 8,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 33, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             IsStatic = 1,
                             Name = "Leadership",
                             Organization = "[1]",
@@ -1931,7 +1934,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 9,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 33, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             IsStatic = 1,
                             Name = "Creativity",
                             Organization = "[1]",
@@ -1944,7 +1947,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 10,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 33, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             IsStatic = 1,
                             Name = "Conflict Resolution",
                             Organization = "[1]",
@@ -1957,7 +1960,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 11,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 33, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             IsStatic = 1,
                             Name = "Programming (Python, Java, C++, etc.)",
                             Organization = "[1]",
@@ -1970,7 +1973,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Id = 12,
                             CreatedAt = new DateTime(2025, 8, 11, 10, 3, 33, 0, DateTimeKind.Unspecified),
                             CreatedBy = 1,
-                            Deleted = false,
+                             
                             IsStatic = 1,
                             Name = "Data Analysis",
                             Organization = "[1]",
@@ -2078,8 +2081,9 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                     b.Property<int?>("DdrmId")
                         .HasColumnType("int");
 
-                    b.Property<bool?>("Deleted")
-                        .HasColumnType("bit");
+                    b.Property<string>("Deleted")
+                        .HasMaxLength(1)
+                        .HasColumnType("nvarchar(1)");
 
                     b.Property<int?>("Department")
                         .HasColumnType("int");
@@ -2337,23 +2341,23 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             Accountability = "[{\"accountability\":\"Accountability asdkfjhaklsdfas...\"}]",
                             CityId = 108956,
                             CountryId = 205,
-                            CreatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(4272),
+                            CreatedAt = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(6656),
                             CreatedBy = 1,
-                            Deleted = false,
+                            Deleted = "0",
                             Department = 1,
-                            Email = "mirriam@harmonyandmotors.com",
+                            Email = "learn@hhacademy.africa",
                             EmployeeTypeId = 11,
-                            EndDate = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(4262),
+                            EndDate = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(6645),
                             HighestQualificationId = 1,
                             IdNumber = "95021228928288",
                             IsSuperAdmin = 1,
-                            JoiningDate = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(4261),
-                            MyOrganization = 1,
+                            JoiningDate = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(6644),
+                            MyOrganization = 204,
                             Name = "Mirriam",
                             NameOfQualification = "Graduation",
-                            OrganizationAccess = "[1,2,3]",
+                            OrganizationAccess = "[205]",
                             OrganizationId = 1,
-                            Password = "ZpEZ+Jq3B4+Am2EnpxJWcN2DJMDA2O5j",
+                            Password = "tyBqCuMQrmJboukQM66P+Rofl08DUeGP0wXw",
                             Permission = "[{\"sidebarId\":1,\"permissions\":{\"1\":{\"view\":true}}}]",
                             Profile = "profile/1717141951646_download.jfif",
                             RaceId = 1,
@@ -2365,7 +2369,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                             UnifiedUserUiqueId = "UIH-1052",
                             UniqueId = "SR0001",
                             UniqueIdStatus = "automatic",
-                            UpdatedAt = new DateTime(2026, 1, 15, 17, 24, 33, 724, DateTimeKind.Utc).AddTicks(4273),
+                            UpdatedAt = new DateTime(2026, 1, 15, 6, 50, 29, 203, DateTimeKind.Utc).AddTicks(6658),
                             UpdatedBy = 1,
                             ViewType = "all"
                         });

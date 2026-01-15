@@ -28,7 +28,7 @@ namespace VuSaniClientApi.Models.DBModels
         // JSON like: [3,2,1]
         public string? Organization { get; set; }
 
-        public int? Deleted { get; set; } = 0;
+        public bool? Deleted { get; set; } = false;
 
         public DateTime? CreatedAt { get; set; }
         public int? CreatedBy { get; set; }

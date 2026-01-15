@@ -17,7 +17,7 @@ namespace VuSaniClientApi.Models.DBModels
         [StringLength(255)]
         public string Name { get; set; } = null!;
 
-        public int? DepartmentHead { get; set; }   // UserId (optional FK if you want later)
+        public int? DepartmentHead { get; set; }   
 
         [StringLength(500)]
         public string? Description { get; set; }

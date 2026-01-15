@@ -50,7 +50,7 @@ namespace VuSaniClientApi.Models.DBModels
 
         public string? Permission { get; set; }
 
-        public int? Deleted { get; set; } = 0;
+        public bool? Deleted { get; set; } = false;
 
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
         public int? CreatedBy { get; set; }

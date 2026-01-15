@@ -30,7 +30,7 @@ namespace VuSaniClientApi.Models.DBModels
 
         public int? IsStatic { get; set; } = 0;
 
-        public int? Deleted { get; set; } = 0;
+        public bool? Deleted { get; set; } = false;
 
         public DateTime? CreatedAt { get; set; }
 

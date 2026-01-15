@@ -50,11 +50,7 @@ namespace VuSaniClientApi.Models.DBModels
         public int? RaceId { get; set; }
 
         [ForeignKey(nameof(RaceId))]
-        public Race? RaceInfo { get; set; }
-
-
-        [StringLength(255)]
-        public string? EmployeeType { get; set; }
+        public Race? Race { get; set; }
 
         public int? HighestQualificationId { get; set; }
         [ForeignKey(nameof(HighestQualificationId))]
@@ -111,8 +107,7 @@ namespace VuSaniClientApi.Models.DBModels
 
         public int? IsSuperAdmin { get; set; } = 0;
 
-        [StringLength(1)]
-        public string? Deleted { get; set; } = "0";
+        public bool? Deleted { get; set; } = false;
 
         public DateTime? CreatedAt { get; set; } = DateTime.UtcNow;
         public int? CreatedBy { get; set; }
@@ -127,8 +122,6 @@ namespace VuSaniClientApi.Models.DBModels
 
         [StringLength(255)]
         public string? MaritalStatus { get; set; }
-
-        public string? EmployeeContactDetails { get; set; }
 
         [StringLength(255)]
         public string? EmploymentStatus { get; set; }
@@ -190,12 +183,13 @@ namespace VuSaniClientApi.Models.DBModels
         [StringLength(500)]
         public string? CurrentAddress { get; set; }
 
-        public int? NextOfKinId { get; set; }
-        [ForeignKey(nameof(NextOfKinId))]
-        public NextOfKin? NextOfKin { get; set; }
+        //public int? NextOfKinId { get; set; }
+        //[ForeignKey(nameof(NextOfKinId))]
+        public ICollection<NextOfKin> NextOfKins { get; set; } = new List<NextOfKin>();
 
-        [StringLength(255)]
-        public string? EmploymentType { get; set; }
+        public int? EmployeeTypeId { get; set; }
+        [ForeignKey(nameof(EmployeeTypeId))]
+        public EmployeeType? EmployeeType { get; set; }
 
         public DateTime? DateOfEmployment { get; set; }
 
@@ -229,9 +223,6 @@ namespace VuSaniClientApi.Models.DBModels
         public int? Incident { get; set; }
         public int? NonConformance { get; set; }
         public int? Risk { get; set; }
-
-    
-
         [StringLength(255)]
         public string? UnifiedUserUiqueId { get; set; }
     }
