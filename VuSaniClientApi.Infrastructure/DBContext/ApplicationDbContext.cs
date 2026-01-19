@@ -34,6 +34,7 @@ namespace VuSaniClientApi.Infrastructure.DBContext
         public DbSet<Bank> Banks { get; set; }
         public DbSet<EmployeeType> EmployeeTypes { get; set; }
         public DbSet<Disability> Disabilities { get; set; }
+        public DbSet<Sidebar> Sidebars { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -43,6 +44,19 @@ namespace VuSaniClientApi.Infrastructure.DBContext
         new Gender { Id = 3, Name = "Other" },
         new Gender { Id = 4, Name = "Prefer not to say" }
     );
+            modelBuilder.Entity<Sidebar>(e =>
+            {
+                e.Property(x => x.Type)
+                 .HasConversion<string>()        // enum <-> string
+                 .HasMaxLength(20);              // stored as nvarchar(20)
+
+                e.Property(x => x.Dependency)
+                 .HasColumnType("nvarchar(max)"); // JSON stored as text
+
+                e.Property(x => x.Deleted)
+                 .HasDefaultValue(false);
+            });
+
 
             modelBuilder.Entity<Organization>()
                 .HasOne(o => o.Parent)

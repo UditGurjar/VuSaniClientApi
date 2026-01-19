@@ -21,4 +21,8 @@
     <ProjectReference Include="..\VuSaniClientApi.Application\VuSaniClientApi.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
 </Project>

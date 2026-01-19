@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using VuSaniClientApi.Infrastructure.GenericRepository;
 using VuSaniClientApi.Infrastructure.Repositories.LoginRepository;
+using VuSaniClientApi.Infrastructure.Repositories.PermissionsRepository;
+using VuSaniClientApi.Infrastructure.Repositories.RoleRepository;
 
 namespace VuSaniClientApi.Infrastructure
 {
@@ -15,6 +17,8 @@ namespace VuSaniClientApi.Infrastructure
         {
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<ILoginRepository, LoginRepository>();
+            services.AddScoped<ISidebarRepository, SidebarRepository>();
+            services.AddScoped<IRoleRepository, RoleRepository>();
 
             return services;
         }
