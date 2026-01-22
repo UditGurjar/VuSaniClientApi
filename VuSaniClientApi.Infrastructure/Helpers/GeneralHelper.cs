@@ -1,13 +1,14 @@
+﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text.Json;
+using System.Text;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using VuSaniClientApi.Infrastructure.DBContext;
+using VuSaniClientApi.Models.DBModels;
 
-namespace VuSaniClientApi.Models.Helpers
+namespace VuSaniClientApi.Infrastructure.Helpers
 {
     public static class GeneralHelper
     {
@@ -72,7 +73,7 @@ namespace VuSaniClientApi.Models.Helpers
                 {
                     // Get max ID from table using raw SQL
                     var escapedId = id.Replace("'", "''");
-                    
+
                     // Use FromSqlRaw for Roles table specifically
                     if (tableName == "Roles")
                     {
@@ -258,5 +259,5 @@ namespace VuSaniClientApi.Models.Helpers
             public string Value { get; set; } = "";
         }
     }
-}
 
+}

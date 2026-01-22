@@ -9,6 +9,7 @@ using VuSaniClientApi.Infrastructure.DBContext;
 using VuSaniClientApi.Models.DTOs;
 using VuSaniClientApi.Models.DBModels;
 using VuSaniClientApi.Models.Helpers;
+using VuSaniClientApi.Infrastructure.Helpers;
 
 namespace VuSaniClientApi.Infrastructure.Repositories.RoleRepository
 {
