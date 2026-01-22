@@ -6,7 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using VuSaniClientApi.Infrastructure.GenericRepository;
 using VuSaniClientApi.Infrastructure.Repositories.LoginRepository;
+using VuSaniClientApi.Infrastructure.Repositories.OrganizationRepository;
 using VuSaniClientApi.Infrastructure.Repositories.PermissionsRepository;
+using VuSaniClientApi.Infrastructure.Repositories.RoleHierarchyRepository;
 using VuSaniClientApi.Infrastructure.Repositories.RoleRepository;
 
 namespace VuSaniClientApi.Infrastructure
@@ -19,6 +21,8 @@ namespace VuSaniClientApi.Infrastructure
             services.AddScoped<ILoginRepository, LoginRepository>();
             services.AddScoped<ISidebarRepository, SidebarRepository>();
             services.AddScoped<IRoleRepository, RoleRepository>();
+            services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+            services.AddScoped<IRoleHierarchyRepository, RoleHierarchyRepository>();
 
             return services;
         }

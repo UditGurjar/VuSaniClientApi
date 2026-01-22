@@ -18,22 +18,18 @@ namespace VuSaniClientApi.Authentication
             })
             .AddJwtBearer(options =>
             {
-                options.RequireHttpsMetadata = false; // set true in prod
+                options.RequireHttpsMetadata = false; // true in prod
                 options.SaveToken = true;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
+                    ValidateIssuer = false,        // ✅ must be false
+                    ValidateAudience = false,      // ✅ must be false
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtSettings["Issuer"],
-                    ValidAudience = jwtSettings["Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(key),
                     ClockSkew = TimeSpan.Zero
                 };
             });
-
-            services.AddControllers();
         }
     }
 

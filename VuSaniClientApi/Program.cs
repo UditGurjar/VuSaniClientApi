@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
 using System.Text.Json.Serialization;
@@ -48,7 +49,40 @@ builder.Services.AddCors(options =>
             //.AllowCredentials();
         });
 });
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "VuSani API", Version = "v1" });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter JWT like: Bearer {your token}"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
+
 var app = builder.Build();
+
+
 app.UseSwagger();
 app.UseSwaggerUI();
 
@@ -72,8 +106,8 @@ app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseCors("AllowReactApp");   // ✅ ADD THIS LINE
 
+app.UseAuthentication();   // 👈 must be before UseAuthorization
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

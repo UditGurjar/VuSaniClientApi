@@ -28,7 +28,9 @@ namespace VuSaniClientApi.Models.DBModels
 
         public string? Responsibilities { get; set; }
 
-        public int? Qualification { get; set; }
+        public int? QualificationId { get; set; }
+        [ForeignKey(nameof(QualificationId))]
+
 
         [StringLength(500)]
         public string? YearOfExperience { get; set; }

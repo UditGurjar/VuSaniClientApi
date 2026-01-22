@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VuSaniClientApi.Infrastructure.Repositories.RoleRepository;
+using VuSaniClientApi.Models.DTOs;
 
 namespace VuSaniClientApi.Application.Services.RoleService
 {
@@ -23,6 +24,18 @@ namespace VuSaniClientApi.Application.Services.RoleService
             catch (Exception)
             {
 
+                throw;
+            }
+        }
+
+        public async Task<object> CreateUpdateRoleAsync(CreateUpdateRoleRequest request, int userId)
+        {
+            try
+            {
+                return await _roleRepository.CreateUpdateRoleAsync(request, userId);
+            }
+            catch (Exception)
+            {
                 throw;
             }
         }
