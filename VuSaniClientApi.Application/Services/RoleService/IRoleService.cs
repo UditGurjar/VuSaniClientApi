@@ -12,5 +12,6 @@ namespace VuSaniClientApi.Application.Services.RoleService
         Task<object> GetRolesAsync(int page, int pageSize, bool all, string search, string filter);
         Task<object> GetRoleByIdAsync(int id);
         Task<object> CreateUpdateRoleAsync(CreateUpdateRoleRequest request, int userId);
+        Task<object> DeleteRoleAsync(int id, int userId);
     }
 }

@@ -51,5 +51,17 @@ namespace VuSaniClientApi.Application.Services.RoleService
                 throw;
             }
         }
+
+        public async Task<object> DeleteRoleAsync(int id, int userId)
+        {
+            try
+            {
+                return await _roleRepository.DeleteRoleAsync(id, userId);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }

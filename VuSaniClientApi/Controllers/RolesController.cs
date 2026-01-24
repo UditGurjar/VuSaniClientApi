@@ -63,6 +63,21 @@ namespace VuSaniClientApi.Controllers
             return Ok(result);
         }
 
+        [Authorize]
+        [HttpDelete("delete-roles/{id}")]
+        [SideBarPermissionAttributeTest("delete", 7, "roles", "organization")]
+        public async Task<IActionResult> DeleteRole(int id)
+        {
+            var userId = GetUserId();
+            if (!userId.HasValue)
+            {
+                return Unauthorized(new { status = false, message = "Unauthorized: Invalid session" });
+            }
+
+            var result = await _roleService.DeleteRoleAsync(id, userId.Value);
+            return Ok(result);
+        }
+
         private int? GetUserId()
         {
             var userId = User.FindFirst("sessionid")?.Value

@@ -286,121 +286,6 @@ namespace VuSaniClientApi.Infrastructure.Repositories.RoleRepository
             }
         }
 
-        //public async Task<object> GetRolesAsync(int page, int pageSize, bool all, string search, string filter)
-        //{
-        //    //// Base query: filter deleted roles
-        //    //var query = _context.Roles
-        //    //    .Where(r => r.Deleted == false)
-        //    //    .AsQueryable();
-
-        //    //// Apply search by role name
-        //    //if (!string.IsNullOrEmpty(search))
-        //    //{
-        //    //    query = query.Where(x => x.Name.Contains(search));
-        //    //}
-
-
-        //    //// Optional filter (replace with your actual column logic)
-        //    //if (!string.IsNullOrEmpty(filter))
-        //    //    query = query.Where(r => r.OrganizationId.ToString() == filter);
-
-        //    //var total = await query.CountAsync();
-
-        //    //// Pagination
-        //    //if (!all)
-        //    //    query = query.Skip((page - 1) * pageSize).Take(pageSize);
-
-        //    //// Select roles with expanded data like Node.js API
-        //    //var data = await query.Select(r => new
-        //    //{
-        //    //    r.Id,
-        //    //    r.Name,
-        //    //    r.Description,
-        //    //    r.Level,
-        //    //    r.Qualification,
-        //    //    r.YearOfExperience,
-        //    //    r.OtherRequirements,
-        //    //    r.SelectOtherRequirements,
-        //    //    r.ReportToRole,
-        //    //    r.Department,
-        //    //    r.Hierarchy,
-        //    //    r.License,
-        //    //    r.Skills,
-        //    //    r.Permission, // JSON string with sidebar permissions
-        //    //    r.PreEmployment,
-        //    //    r.PostEmployment,
-        //    //    r.UniqueId,
-        //    //    Organization = r.Organization != null ? new
-        //    //    {
-        //    //        r.Organization.Id,
-        //    //        r.Organization.Name
-        //    //    } : null,
-
-        //    //    Licenses = string.IsNullOrEmpty(r.License)
-        //    //        ? new List<int>()
-        //    //        : JsonSerializer.Deserialize<List<int>>(r.License),
-        //    //    SkillsList = string.IsNullOrEmpty(r.Skills)
-        //    //        ? new List<int>()
-        //    //        : JsonSerializer.Deserialize<List<int>>(r.Skills),
-        //    //    Permissions = string.IsNullOrEmpty(r.Permission)
-        //    //        ? new List<object>()
-        //    //        : JsonSerializer.Deserialize<List<object>>(r.Permission),
-        //    //    CreatedBy = r.CreatedBy,
-        //    //    CreatedAt = r.CreatedAt,
-        //    //    UpdatedBy = r.UpdatedBy,
-        //    //    UpdatedAt = r.UpdatedAt
-        //    //}).ToListAsync();
-
-        //    //return new
-        //    //{
-        //    //    total,
-        //    //    page,
-        //    //    pageSize,
-        //    //    data
-        //    //};
-        //    var query = _context.Roles.AsQueryable();
-
-        //    // Apply search or filters in SQL
-        //    if (!string.IsNullOrEmpty(search))
-        //        query = query.Where(x => x.Name.Contains(search));
-
-        //    var total = await query.CountAsync();
-
-        //    // Pagination in SQL
-        //    if (!all)
-        //        query = query.Skip((page - 1) * pageSize).Take(pageSize);
-
-        //    // Materialize query first
-        //    var rolesFromDb = await query.ToListAsync();
-
-        //    // Now deserialize JSON in memory
-        //    var rolesDto = rolesFromDb.Select(r => new
-        //    {
-        //        r.Id,
-        //        r.Name,
-        //        r.Description,
-        //        Licenses = string.IsNullOrEmpty(r.License)
-        //            ? new List<int>()
-        //            : JsonSerializer.Deserialize<List<int>>(r.License)!,
-        //        SkillsList = string.IsNullOrEmpty(r.Skills)
-        //            ? new List<int>()
-        //            : JsonSerializer.Deserialize<List<int>>(r.Skills)!,
-        //        Permissions = string.IsNullOrEmpty(r.Permission)
-        //            ? new List<object>()
-        //            : JsonSerializer.Deserialize<List<object>>(r.Permission)!,
-        //        r.CreatedBy,
-        //        r.CreatedAt
-        //    }).ToList();
-
-        //    return new
-        //    {
-        //        total,
-        //        page,
-        //        pageSize,
-        //        data = rolesDto
-        //    };
-
-        //}
 
         public async Task<object> CreateUpdateRoleAsync(CreateUpdateRoleRequest request, int userId)
         {
@@ -510,7 +395,34 @@ namespace VuSaniClientApi.Infrastructure.Repositories.RoleRepository
                     return new { status = true, message = "Record created successfully" };
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<object> DeleteRoleAsync(int id, int userId)
+        {
+            try
+            {
+                // Find the role
+                var role = await _context.Roles.FirstOrDefaultAsync(r => r.Id == id && r.Deleted == false);
+
+                if (role == null)
+                {
+                    return new { status = false, message = "Record not found" };
+                }
+
+                // Soft delete - set deleted to true
+                role.Deleted = true;
+                await _context.SaveChangesAsync();
+
+                // Insert activity log
+                //await GeneralHelper.InsertActivityLogAsync(_context, userId, "delete", "roles", id);
+
+                return new { status = true, message = "Record deleted successfully" };
+            }
+            catch (Exception)
             {
                 throw;
             }
