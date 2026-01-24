@@ -5,15 +5,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VuSaniClientApi.Infrastructure.GenericRepository;
+using VuSaniClientApi.Infrastructure.Repositories.CommonPermissionRepository;
+using VuSaniClientApi.Infrastructure.Repositories.DepartmentRepository;
+using VuSaniClientApi.Infrastructure.Repositories.HighestQualificationRepository;
+using VuSaniClientApi.Infrastructure.Repositories.LicenseRepository;
 using VuSaniClientApi.Infrastructure.Repositories.LoginRepository;
 using VuSaniClientApi.Infrastructure.Repositories.OrganizationRepository;
 using VuSaniClientApi.Infrastructure.Repositories.PermissionsRepository;
 using VuSaniClientApi.Infrastructure.Repositories.RoleHierarchyRepository;
 using VuSaniClientApi.Infrastructure.Repositories.RoleRepository;
 using VuSaniClientApi.Infrastructure.Repositories.SkillRepository;
-using VuSaniClientApi.Infrastructure.Repositories.LicenseRepository;
-using VuSaniClientApi.Infrastructure.Repositories.DepartmentRepository;
-using VuSaniClientApi.Infrastructure.Repositories.HighestQualificationRepository;
 
 namespace VuSaniClientApi.Infrastructure
 {
@@ -31,6 +32,8 @@ namespace VuSaniClientApi.Infrastructure
             services.AddScoped<ILicenseRepository, LicenseRepository>();
             services.AddScoped<IDepartmentRepository, DepartmentRepository>();
             services.AddScoped<IHighestQualificationRepository, HighestQualificationRepository>();
+            services.AddScoped<ICommonPermissionRepository, CommonPermissionRepository>();
+
 
             return services;
         }

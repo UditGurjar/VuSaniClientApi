@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using VuSaniClientApi.Infrastructure.DBContext;
-using VuSaniClientApi.Filters;
+using static VuSaniClientApi.Models.Helpers.Permissions;
 
 namespace VuSaniClientApi.Infrastructure.Helpers
 {

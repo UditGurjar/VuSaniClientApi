@@ -1,202 +1,16 @@
-﻿//using Microsoft.AspNetCore.Mvc;
-//using Microsoft.AspNetCore.Mvc.Filters;
-//using Microsoft.Data.SqlClient;
-//using Microsoft.EntityFrameworkCore;
-//using System.Text.Json;
-//using VuSaniClientApi.Infrastructure.DBContext;
-
-//namespace VuSaniClientApi.Filters
-//{
-//    public class SideBarPermissionAttributeTest : Attribute, IAsyncAuthorizationFilter
-//    {
-//        private readonly string _accessType;
-//        private readonly int _moduleId;
-//        private readonly string _tableName;
-//        private readonly string _field;
-
-//        public SideBarPermissionAttributeTest(string accessType, int moduleId, string tableName, string field = "organization")
-//        {
-//            _accessType = accessType;
-//            _moduleId = moduleId;
-//            _tableName = tableName;
-//            _field = field;
-//        }
-//        public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
-//        {
-//            try
-//            {
-//                var db = context.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
-//                var user = context.HttpContext.User;
-
-//                var sessionIdClaim = user.Claims.FirstOrDefault(x => x.Type == "sessionid")?.Value;
-//                if (string.IsNullOrEmpty(sessionIdClaim))
-//                {
-//                    context.Result = new UnauthorizedResult();
-//                    return;
-//                }
-
-//                int userId = Convert.ToInt32(sessionIdClaim);
-
-//                /* ---- Update sidebar table_name on view (same as Node) ---- */
-//                if (_accessType == "view" && !string.IsNullOrEmpty(_tableName))
-//                {
-//                    var sidebar = await db.Sidebars.FirstOrDefaultAsync(x => x.Id == _moduleId);
-//                    if (sidebar != null && string.IsNullOrEmpty(sidebar.TableName))
-//                    {
-//                        sidebar.TableName = _tableName;
-//                        await db.SaveChangesAsync();
-//                    }
-//                }
-
-//                /* ---- Get user permissions ---- */
-//                var userData = await db.Users
-//                    .Where(x => x.Id == userId)
-//                    .Select(x => new { x.Permission, x.Organization })
-//                    .FirstOrDefaultAsync();
-
-//                if (userData == null || string.IsNullOrEmpty(userData.Permission))
-//                {
-//                    context.Result = new JsonResult(new { status = false, message = "You don't have permission" }) { StatusCode = 401 };
-//                    return;
-//                }
-
-//                // Deserialize the permission JSON into a structured list
-//                var permissions = JsonSerializer.Deserialize<List<UserPermission>>(userData.Permission,
-//                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<UserPermission>();
-//                if (permissions == null || permissions.Count == 0)
-//                {
-//                    context.Result = new JsonResult(new { status = false, message = "You don't have permission" }) { StatusCode = 401 };
-//                    return;
-//                }
-
-//                var sidebarData = await db.Sidebars.FirstOrDefaultAsync(x => x.Id == _moduleId);
-//                if (sidebarData?.Path?.Contains("/settings") == true &&
-//                    !sidebarData.Path.Contains("/settings/department") &&
-//                    !sidebarData.Path.Contains("/settings/teams"))
-//                {
-//                    context.HttpContext.Items["settings"] = true;
-//                }
-
-//                bool sidebarExists = false;
-
-//                foreach (var p in permissions)
-//                {
-//                    if (p.SidebarId == _moduleId)
-//                    {
-//                        sidebarExists = true;
-
-//                        if (_accessType == "view")
-//                        {
-//                            var allowedOrgs = p.Permissions
-//                                .Where(x => x.Value.View)
-//                                .Select(x => int.Parse(x.Key))
-//                                .ToList();
-
-//                            context.HttpContext.Items["additionalData"] = allowedOrgs;
-//                            return;
-//                        }
-
-//                        if (_accessType == "create")
-//                        {
-//                            var body = await context.HttpContext.Request.ReadFromJsonAsync<Dictionary<string, object>>();
-
-//                            var allowedOrgs = p.Permissions
-//                                .Where(x => x.Value.Create)
-//                                .Select(x => int.Parse(x.Key))
-//                                .ToList();
-
-//                            if (!allowedOrgs.Any())
-//                            {
-//                                context.Result = new JsonResult(new { status = false, message = "You don't have permission to access this" }) { StatusCode = 401 };
-//                                return;
-//                            }
-
-//                            context.HttpContext.Items["allowedOrganizations"] = allowedOrgs;
-//                            return;
-//                        }
-
-//                        if (_accessType == "edit" || _accessType == "delete")
-//                        {
-//                            var routeId = context.RouteData.Values["id"]?.ToString();
-//                            if (string.IsNullOrEmpty(routeId))
-//                            {
-//                                context.Result = new JsonResult(new { status = false, message = "Id is required" }) { StatusCode = 400 };
-//                                return;
-//                            }
-
-//                            var sql = $"SELECT {_field} FROM {_tableName} WHERE Id = @id";
-//                            var orgResult = await db.Database.SqlQueryRaw<string>(sql, new SqlParameter("@id", routeId)).FirstAsync();
-
-//                            var orgIds = JsonSerializer.Deserialize<List<int>>(orgResult);
-
-//                            bool hasPermission = orgIds.Any(orgId =>
-//                                p.Permissions.ContainsKey(orgId.ToString()) &&
-//                                (_accessType == "edit"
-//                                    ? p.Permissions[orgId.ToString()].Edit
-//                                    : p.Permissions[orgId.ToString()].Delete)
-//                            );
-
-//                            if (!hasPermission)
-//                            {
-//                                context.Result = new JsonResult(new
-//                                {
-//                                    status = false,
-//                                    message = $"You don't have permission to {_accessType} this record"
-//                                })
-//                                { StatusCode = 401 };
-
-//                                return;
-//                            }
-
-//                            return;
-//                        }
-//                    }
-//                }
-
-//                if (!sidebarExists)
-//                {
-//                    context.Result = new JsonResult(new
-//                    {
-//                        status = false,
-//                        message = $"You don't have permission to access this module or module is deleted. ModuleId: {_moduleId}"
-//                    })
-//                    { StatusCode = 401 };
-//                }
-//            }
-//            catch (Exception ex)
-//            {
-//                context.Result = new JsonResult(new { status = false, message = ex.Message }) { StatusCode = 500 };
-//            }
-//        }
-//    }
-//}
-
-//public class UserPermission
-//{
-//    public int SidebarId { get; set; }
-//    public Dictionary<string, PermissionActions> Permissions { get; set; } = new();
-//}
-
-//public class PermissionActions
-//{
-//    public bool View { get; set; }
-//    public bool Create { get; set; }
-//    public bool Edit { get; set; }
-//    public bool Delete { get; set; }
-//}
-
-
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Text.Json;
 using VuSaniClientApi.Infrastructure.DBContext;
+using VuSaniClientApi.Infrastructure.Repositories.CommonPermissionRepository;
+using static VuSaniClientApi.Models.Helpers.Permissions;
 
 namespace VuSaniClientApi.Filters
 {
-    public class SideBarPermissionAttributeTest : Attribute, IAsyncAuthorizationFilter
+    public class SideBarPermissionAttributeTest : Attribute, IAsyncActionFilter
     {
         private readonly string _accessType;    
         private readonly int _moduleId;
@@ -211,7 +25,7 @@ namespace VuSaniClientApi.Filters
             _field = field;
         }
 
-        public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
+        public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             try
             {
@@ -265,8 +79,30 @@ namespace VuSaniClientApi.Filters
                     return;
                 }
 
+                // ✅ Resolve dynamic access type for common API
+                string resolvedAccessType = _accessType;
+
+                if (_accessType == "create-update")
+                {
+                    var bodyObj = context.ActionArguments.Values.FirstOrDefault();
+
+                    if (bodyObj != null)
+                    {
+                        var idProp = bodyObj.GetType().GetProperty("Id");
+
+                        if (idProp != null)
+                        {
+                            var idValue = idProp.GetValue(bodyObj);
+
+                            resolvedAccessType = (idValue == null || Convert.ToInt32(idValue) == 0)
+                                ? "create"
+                                : "edit";
+                        }
+                    }
+                }
+
                 // Handle permissions based on access type
-                switch (_accessType)
+                switch (resolvedAccessType)
                 {
                     case "view":
                         var viewOrgs = modulePermission.Permissions
@@ -296,40 +132,75 @@ namespace VuSaniClientApi.Filters
 
                     case "edit":
                     case "delete":
-                        var routeId = context.RouteData.Values["id"]?.ToString();
-                        if (string.IsNullOrEmpty(routeId))
+
+                        string recordId = null;
+
+                        // 1️⃣ Try get id from route
+                        if (context.RouteData.Values.ContainsKey("id"))
                         {
-                            context.Result = new JsonResult(new { status = false, message = "Id is required" }) { StatusCode = 400 };
+                            recordId = context.RouteData.Values["id"]?.ToString();
+                        }
+
+                        // 2️⃣ If not in route, try get id from body (for create-update APIs)
+                        if (string.IsNullOrEmpty(recordId))
+                        {
+                            var bodyObj = context.ActionArguments.Values.FirstOrDefault();
+                            if (bodyObj != null)
+                            {
+                                var idProp = bodyObj.GetType().GetProperty("Id");
+                                if (idProp != null)
+                                {
+                                    recordId = idProp.GetValue(bodyObj)?.ToString();
+                                }
+                            }
+                        }
+
+                        if (string.IsNullOrEmpty(recordId) || recordId == "0")
+                        {
+                            context.Result = new JsonResult(new { status = false, message = "Valid Id is required" }) { StatusCode = 400 };
+                            return;
+                        }
+                       
+                        var permissionRepo = context.HttpContext.RequestServices
+    .GetRequiredService<ICommonPermissionRepository>();
+
+                        var orgIds = await permissionRepo.GetOrganizationsAsync(_tableName, int.Parse(recordId));
+
+                        if (!orgIds.Any())
+                        {
+                            context.Result = new JsonResult(new { status = false, message = "Record not found" })
+                            { StatusCode = 404 };
                             return;
                         }
 
-                        // Fetch organization(s) of record
-                        var sql = $"SELECT {_field} FROM {_tableName} WHERE Id = @id";
-                        var orgResult = await db.Database.SqlQueryRaw<string>(sql, new SqlParameter("@id", routeId)).FirstOrDefaultAsync();
-                        if (string.IsNullOrEmpty(orgResult))
-                        {
-                            context.Result = new JsonResult(new { status = false, message = "Record not found" }) { StatusCode = 404 };
-                            return;
-                        }
-
-                        var orgIds = JsonSerializer.Deserialize<List<int>>(orgResult) ?? new List<int>();
                         bool hasPermission = orgIds.Any(orgId =>
                             modulePermission.Permissions.ContainsKey(orgId.ToString()) &&
-                            (_accessType == "edit"
+                            (resolvedAccessType == "edit"
                                 ? modulePermission.Permissions[orgId.ToString()].Edit
-                                : modulePermission.Permissions[orgId.ToString()].Delete));
+                                : modulePermission.Permissions[orgId.ToString()].Delete)
+                        );
 
                         if (!hasPermission)
                         {
-                            context.Result = new JsonResult(new { status = false, message = $"No {_accessType} permission for this record" }) { StatusCode = 401 };
+                            context.Result = new JsonResult(new
+                            {
+                                status = false,
+                                message = $"No {resolvedAccessType} permission for this record"
+                            })
+                            { StatusCode = 401 };
                             return;
                         }
+
                         break;
+
 
                     default:
                         context.Result = new JsonResult(new { status = false, message = "Invalid access type" }) { StatusCode = 400 };
                         break;
                 }
+
+                await next();
+
             }
             catch (Exception ex)
             {
@@ -338,18 +209,5 @@ namespace VuSaniClientApi.Filters
         }
     }
 
-    public class UserPermission
-    {
-        public int SidebarId { get; set; }
-        public Dictionary<string, PermissionActions> Permissions { get; set; } = new();
-    }
-
-    public class PermissionActions
-    {
-        public bool View { get; set; }
-        public bool Create { get; set; }
-        public bool Edit { get; set; }
-        public bool Delete { get; set; }
-    }
 }
 

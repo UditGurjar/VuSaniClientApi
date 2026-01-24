@@ -459,7 +459,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.RoleRepository
                     await _context.SaveChangesAsync();
 
                     // Insert Activity Log
-                    await GeneralHelper.InsertActivityLogAsync(_context, userId, "update", "Roles", request.Id.Value);
+                    //await GeneralHelper.InsertActivityLogAsync(_context, userId, "update", "Roles", request.Id.Value);
 
                     return new { status = true, message = "Record updated successfully" };
                 }
@@ -505,7 +505,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.RoleRepository
                     await _context.SaveChangesAsync();
 
                     // Insert Activity Log
-                    await GeneralHelper.InsertActivityLogAsync(_context, userId, "create", "Roles", newRole.Id);
+                   // await GeneralHelper.InsertActivityLogAsync(_context, userId, "create", "Roles", newRole.Id);
 
                     return new { status = true, message = "Record created successfully" };
                 }

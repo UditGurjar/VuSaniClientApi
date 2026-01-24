@@ -43,7 +43,9 @@ namespace VuSaniClientApi.Controllers
 
         [Authorize]
         [HttpPost("create-update-role")]
+        //[SideBarPermissionAttributeTest("create", 7, "roles", "organization")]
         [SideBarPermissionAttributeTest("create-update", 7, "roles", "organization")]
+
         public async Task<IActionResult> CreateUpdateRole([FromBody] CreateUpdateRoleRequest request)
         {
             if (!ModelState.IsValid)

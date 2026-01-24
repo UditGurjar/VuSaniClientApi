@@ -12,13 +12,13 @@ namespace VuSaniClientApi.Infrastructure.Helpers
 {
     public static class GeneralHelper
     {
-        public static string? EncodeSingle(string? data)
-        {
-            if (string.IsNullOrWhiteSpace(data))
-                return null;
+            public static string? EncodeSingle(string? data)
+            {
+                if (string.IsNullOrWhiteSpace(data))
+                    return null;
 
-            return WebUtility.HtmlEncode(data);
-        }
+                return WebUtility.HtmlEncode(data);
+            }
 
         public static async Task<string> UniqueIdGeneratorAsync(
             ApplicationDbContext context,
