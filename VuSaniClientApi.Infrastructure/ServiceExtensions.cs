@@ -10,6 +10,10 @@ using VuSaniClientApi.Infrastructure.Repositories.OrganizationRepository;
 using VuSaniClientApi.Infrastructure.Repositories.PermissionsRepository;
 using VuSaniClientApi.Infrastructure.Repositories.RoleHierarchyRepository;
 using VuSaniClientApi.Infrastructure.Repositories.RoleRepository;
+using VuSaniClientApi.Infrastructure.Repositories.SkillRepository;
+using VuSaniClientApi.Infrastructure.Repositories.LicenseRepository;
+using VuSaniClientApi.Infrastructure.Repositories.DepartmentRepository;
+using VuSaniClientApi.Infrastructure.Repositories.HighestQualificationRepository;
 
 namespace VuSaniClientApi.Infrastructure
 {
@@ -23,6 +27,10 @@ namespace VuSaniClientApi.Infrastructure
             services.AddScoped<IRoleRepository, RoleRepository>();
             services.AddScoped<IOrganizationRepository, OrganizationRepository>();
             services.AddScoped<IRoleHierarchyRepository, RoleHierarchyRepository>();
+            services.AddScoped<ISkillRepository, SkillRepository>();
+            services.AddScoped<ILicenseRepository, LicenseRepository>();
+            services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+            services.AddScoped<IHighestQualificationRepository, HighestQualificationRepository>();
 
             return services;
         }

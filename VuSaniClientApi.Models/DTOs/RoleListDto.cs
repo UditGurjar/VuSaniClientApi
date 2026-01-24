@@ -25,7 +25,7 @@ namespace VuSaniClientApi.Models.DTOs
         public string? Other_requirements { get; set; }
         public string? Select_other_requirements { get; set; }
 
-        public string? Level { get; set; }
+        public int? Level { get; set; }
 
         public string? Name { get; set; }
         public string? Description { get; set; }
@@ -45,9 +45,16 @@ namespace VuSaniClientApi.Models.DTOs
         public string? Hierarchy_name { get; set; }
         public string? Qualification_name { get; set; }
 
+        // For list view - detailed objects
         public List<IdNameDto> SkillsDetail { get; set; } = new();
         public List<IdNameDto> LicenseDetail { get; set; } = new();
         public List<IdNameDto> ResponsibilityDetail { get; set; } = new();
+
+        // For form - arrays of IDs
+        public List<int> Skills { get; set; } = new();
+
+        // Additional fields for form
+        public int? Department { get; set; }
     }
 
     public class IdNameDto

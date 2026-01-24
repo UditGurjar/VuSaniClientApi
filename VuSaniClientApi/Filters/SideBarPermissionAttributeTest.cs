@@ -198,7 +198,7 @@ namespace VuSaniClientApi.Filters
 {
     public class SideBarPermissionAttributeTest : Attribute, IAsyncAuthorizationFilter
     {
-        private readonly string _accessType;
+        private readonly string _accessType;    
         private readonly int _moduleId;
         private readonly string _tableName;
         private readonly string _field;

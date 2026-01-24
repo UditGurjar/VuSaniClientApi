@@ -75,13 +75,15 @@ namespace VuSaniClientApi.Infrastructure.Repositories.RoleHierarchyRepository
             var result = rawData.Select(r =>
             {
                 var details = new List<OrganizationMiniDto>();
+                List<int> orgIds = new List<int>();
 
                 if (!string.IsNullOrEmpty(r.rh.Organization))
                 {
                     var parsed = JsonSerializer.Deserialize<List<int>>(r.rh.Organization);
                     if (parsed != null)
                     {
-                        foreach (var id in parsed.Distinct())
+                        orgIds = parsed.Distinct().ToList();
+                        foreach (var id in orgIds)
                         {
                             if (orgMap.ContainsKey(id))
                             {
@@ -102,12 +104,14 @@ namespace VuSaniClientApi.Infrastructure.Repositories.RoleHierarchyRepository
                     Id = r.rh.Id,
                     Name = r.rh.Name,
                     Description = DecodeHelper.DecodeSingle(r.rh.Description),
+                    Level = r.rh.Level,
 
                     CreatedBy = r.u?.Name,
                     CreatedBySurname = r.u?.Surname,
                     CreatedById = r.u?.Id,
                     CreatedByProfile = r.u?.Profile,
 
+                    Organization = orgIds,
                     Organization_Details = details
                 };
             }).ToList();

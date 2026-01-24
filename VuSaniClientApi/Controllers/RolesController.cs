@@ -13,6 +13,7 @@ namespace VuSaniClientApi.Controllers
     public class RolesController : ControllerBase
     {
         private readonly IRoleService _roleService;
+
         public RolesController(IRoleService roleService)
         {
             _roleService = roleService;
@@ -29,16 +30,20 @@ namespace VuSaniClientApi.Controllers
         {
             var result = await _roleService.GetRolesAsync(page, pageSize, all, search, filter);
             return Ok(result);
+        }
 
-            //return Ok(new
-            //{
-            //    status = true,
-            //    data = result
-            //});
+        [Authorize]
+        [HttpGet("get-roles/{id}")]
+        [SideBarPermissionAttributeTest("view", 7, "roles")]
+        public async Task<IActionResult> GetRoleById(int id)
+        {
+            var result = await _roleService.GetRoleByIdAsync(id);
+            return Ok(result);
         }
 
         [Authorize]
         [HttpPost("create-update-role")]
+        [SideBarPermissionAttributeTest("create-update", 7, "roles", "organization")]
         public async Task<IActionResult> CreateUpdateRole([FromBody] CreateUpdateRoleRequest request)
         {
             if (!ModelState.IsValid)
@@ -51,12 +56,6 @@ namespace VuSaniClientApi.Controllers
             {
                 return Unauthorized(new { status = false, message = "Unauthorized: Invalid session" });
             }
-
-            // Check permission - use "edit" if id is provided, otherwise "create"
-            var permissionType = request.Id.HasValue ? "edit" : "create";
-            // Note: SideBarPermissionAttributeTest doesn't support dynamic permission checking
-            // You may need to implement a custom attribute or check permissions manually
-            // For now, we'll rely on the service layer validation
 
             var result = await _roleService.CreateUpdateRoleAsync(request, userId.Value);
             return Ok(result);

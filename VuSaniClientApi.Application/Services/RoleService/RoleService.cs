@@ -28,6 +28,18 @@ namespace VuSaniClientApi.Application.Services.RoleService
             }
         }
 
+        public async Task<object> GetRoleByIdAsync(int id)
+        {
+            try
+            {
+                return await _roleRepository.GetRoleByIdAsync(id);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         public async Task<object> CreateUpdateRoleAsync(CreateUpdateRoleRequest request, int userId)
         {
             try

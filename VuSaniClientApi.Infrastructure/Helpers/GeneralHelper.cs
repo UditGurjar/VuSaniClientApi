@@ -102,16 +102,74 @@ namespace VuSaniClientApi.Infrastructure.Helpers
                     }
                     else
                     {
-                        // For other tables, use raw SQL
-                        var sql = $"SELECT TOP 1 {key} as Value FROM {tableName} WHERE {key} LIKE '{escapedId}%' ORDER BY id DESC";
-                        var maxRecords = await context.Database
-                            .SqlQueryRaw<IdResult>(sql)
-                            .ToListAsync();
+                        // For other tables, use EF Core
+                        string? maxUniqueId = null;
 
-                        if (maxRecords.Any() && !string.IsNullOrEmpty(maxRecords[0].Value))
+                        switch (tableName.ToLower())
                         {
-                            var lastValue = maxRecords[0].Value;
-                            var parts = lastValue.Split(new[] { id + "/" }, StringSplitOptions.None);
+                            case "skills":
+                                maxUniqueId = await context.Skills
+                                    .Where(s => s.UniqueId != null && s.UniqueId.StartsWith(id))
+                                    .OrderByDescending(s => s.Id)
+                                    .Select(s => s.UniqueId)
+                                    .FirstOrDefaultAsync();
+                                break;
+
+                            case "licence":
+                            case "licenses":
+                                maxUniqueId = await context.Licences
+                                    .Where(l => l.UniqueId != null && l.UniqueId.StartsWith(id))
+                                    .OrderByDescending(l => l.Id)
+                                    .Select(l => l.UniqueId)
+                                    .FirstOrDefaultAsync();
+                                break;
+
+                            case "department":
+                            case "departments":
+                                maxUniqueId = await context.Department
+                                    .Where(d => d.UniqueId != null && d.UniqueId.StartsWith(id))
+                                    .OrderByDescending(d => d.Id)
+                                    .Select(d => d.UniqueId)
+                                    .FirstOrDefaultAsync();
+                                break;
+
+                            case "highestqualification":
+                            case "highest_qualification":
+                            case "highestqualifications":
+                                maxUniqueId = await context.HighestQualifications
+                                    .Where(hq => hq.UniqueId != null && hq.UniqueId.StartsWith(id))
+                                    .OrderByDescending(hq => hq.Id)
+                                    .Select(hq => hq.UniqueId)
+                                    .FirstOrDefaultAsync();
+                                break;
+
+                            case "rolehierarchy":
+                            case "role_hierarchy":
+                            case "rolehierarchies":
+                                maxUniqueId = await context.RoleHierarchies
+                                    .Where(rh => rh.UniqueId != null && rh.UniqueId.StartsWith(id))
+                                    .OrderByDescending(rh => rh.Id)
+                                    .Select(rh => rh.UniqueId)
+                                    .FirstOrDefaultAsync();
+                                break;
+
+                            case "organization":
+                            case "organizations":
+                                maxUniqueId = await context.Organizations
+                                    .Where(o => o.UniqueId != null && o.UniqueId.StartsWith(id))
+                                    .OrderByDescending(o => o.Id)
+                                    .Select(o => o.UniqueId)
+                                    .FirstOrDefaultAsync();
+                                break;
+
+                            default:
+                                // For unknown tables, throw exception to force explicit table handling
+                                throw new NotSupportedException($"Table '{tableName}' is not supported for unique ID generation. Please add it to the switch statement in GeneralHelper.UniqueIdGeneratorAsync");
+                        }
+
+                        if (!string.IsNullOrEmpty(maxUniqueId))
+                        {
+                            var parts = maxUniqueId.Split(new[] { id + "/" }, StringSplitOptions.None);
                             if (parts.Length > 1 && int.TryParse(parts[1], out int serialNo))
                             {
                                 id += "/" + (serialNo + 1).ToString("000");
@@ -245,8 +303,112 @@ namespace VuSaniClientApi.Infrastructure.Helpers
                         break;
                 }
 
-                await context.Database.ExecuteSqlRawAsync(
-                    $"INSERT INTO activity_log(created_by, status, module, message) VALUES ({createdBy}, '{status}', '{module}', '{message}')");
+                var activityLog = new ActivityLog
+                {
+                    CreatedBy = createdBy,
+                    Status = status,
+                    Module = module,
+                    Message = message,
+                    Deleted = false,
+                    CreatedAt = DateTime.Now
+                };
+
+                context.ActivityLogs.Add(activityLog);
+                await context.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public static async Task<string?> GetFieldValueByIdAsync(
+            ApplicationDbContext context,
+            string tableName,
+            string fieldName,
+            int id)
+        {
+            try
+            {
+                switch (tableName.ToLower())
+                {
+                    case "roles":
+                        var role = await context.Roles.FindAsync(id);
+                        if (role == null) return null;
+                        return fieldName.ToLower() switch
+                        {
+                            "organization" => role.OrganizationId?.ToString(),
+                            "organizationid" => role.OrganizationId?.ToString(),
+                            _ => null
+                        };
+
+                    case "skills":
+                        var skill = await context.Skills.FindAsync(id);
+                        if (skill == null) return null;
+                        return fieldName.ToLower() switch
+                        {
+                            "organization" => skill.Organization,
+                            _ => null
+                        };
+
+                    case "licence":
+                    case "licenses":
+                        var license = await context.Licences.FindAsync(id);
+                        if (license == null) return null;
+                        return fieldName.ToLower() switch
+                        {
+                            "organization" => license.Organization,
+                            _ => null
+                        };
+
+                    case "department":
+                    case "departments":
+                        var department = await context.Department.FindAsync(id);
+                        if (department == null) return null;
+                        return fieldName.ToLower() switch
+                        {
+                            "organization" => department.OrganizationId?.ToString(),
+                            "organizationid" => department.OrganizationId?.ToString(),
+                            _ => null
+                        };
+
+                    case "highestqualification":
+                    case "highest_qualification":
+                    case "highestqualifications":
+                        var qualification = await context.HighestQualifications.FindAsync(id);
+                        if (qualification == null) return null;
+                        return fieldName.ToLower() switch
+                        {
+                            "organization" => qualification.Organization,
+                            _ => null
+                        };
+
+                    case "rolehierarchy":
+                    case "role_hierarchy":
+                    case "rolehierarchies":
+                        var roleHierarchy = await context.RoleHierarchies.FindAsync(id);
+                        if (roleHierarchy == null) return null;
+                        return fieldName.ToLower() switch
+                        {
+                            "organization" => roleHierarchy.Organization,
+                            _ => null
+                        };
+
+                    case "organization":
+                    case "organizations":
+                        var organization = await context.Organizations.FindAsync(id);
+                        if (organization == null) return null;
+                        return fieldName.ToLower() switch
+                        {
+                            "organization" => organization.Id.ToString(),
+                            "id" => organization.Id.ToString(),
+                            _ => null
+                        };
+
+                    default:
+                        // For unknown tables, return null (should be handled by caller)
+                        return null;
+                }
             }
             catch (Exception)
             {

@@ -160,6 +160,104 @@ namespace VuSaniClientApi.Infrastructure.Repositories.RoleRepository
             };
         }
 
+        public async Task<object> GetRoleByIdAsync(int id)
+        {
+            var query =
+       from role in _context.Roles
+
+       join user in _context.Users
+           on role.CreatedBy equals user.Id into users
+       from user in users.DefaultIfEmpty()
+
+       join org in _context.Organizations
+           on role.OrganizationId equals org.Id into orgs
+       from org in orgs.DefaultIfEmpty()
+
+       join hierarchy in _context.RoleHierarchies
+           on role.Hierarchy equals hierarchy.Id into hierarchies
+       from hierarchy in hierarchies.DefaultIfEmpty()
+
+       join qualification in _context.HighestQualifications
+           on role.QualificationId equals qualification.Id into qualifications
+       from qualification in qualifications.DefaultIfEmpty()
+
+       join reportRole in _context.Roles
+           on role.ReportToRole equals reportRole.Id.ToString() into reportRoles
+       from reportRole in reportRoles.DefaultIfEmpty()
+
+       where role.Deleted == false && role.Id == id
+       select new
+       {
+           role,
+           user,
+           org,
+           hierarchy,
+           qualification,
+           reportRole
+       };
+
+            var rawData = await query.FirstOrDefaultAsync();
+
+            if (rawData == null)
+            {
+                return new { status = false, message = "Role not found" };
+            }
+
+            // Parse skills and licenses
+            var skillIds = SafeParseIds(rawData.role.Skills);
+            var licenseIds = SafeParseIds(rawData.role.License);
+
+            // Get skills details
+            var skills = await _context.Skills
+                .Where(x => skillIds.Contains(x.Id))
+                .Select(x => new IdNameDto { Id = x.Id, Name = x.Name })
+                .ToListAsync();
+
+            // Get licenses details
+            var licenses = await _context.Licences
+                .Where(x => licenseIds.Contains(x.Id))
+                .Select(x => new IdNameDto { Id = x.Id, Name = x.Name })
+                .ToListAsync();
+
+            // Decode description
+            var description = Models.Helpers.DecodeHelper.DecodeSingle(rawData.role.Description);
+
+            var roleDto = new RoleListDto
+            {
+                Id = rawData.role.Id,
+                Unique_id = rawData.role.UniqueId,
+                Report_to_role = string.IsNullOrEmpty(rawData.role.ReportToRole) ? null : int.Parse(rawData.role.ReportToRole),
+                Report_to_role_name = rawData.reportRole?.Name,
+                Hierarchy = rawData.role.Hierarchy,
+                Qualification = rawData.role.QualificationId,
+                Year_of_experience = rawData.role.YearOfExperience,
+                License = licenseIds,
+                Other_requirements = rawData.role.OtherRequirements,
+                Select_other_requirements = rawData.role.SelectOtherRequirements,
+                Level = rawData.role.Level,
+                Name = rawData.role.Name,
+                Description = description,
+                Organization = rawData.role.OrganizationId,
+                Organization_name = rawData.org?.Name,
+                Department = rawData.role.Department,
+                Created_by_id = rawData.user?.Id,
+                Created_by = rawData.user?.Name,
+                Created_by_profile = rawData.user?.Profile,
+                Created_by_surname = rawData.user?.Surname,
+                Hierarchy_name = rawData.hierarchy?.Name,
+                Qualification_name = rawData.qualification?.Name,
+                SkillsDetail = skills,
+                LicenseDetail = licenses,
+                Skills = skillIds
+            };
+
+            return new
+            {
+                status = true,
+                data = roleDto
+            };
+        }
+
         private static List<int> SafeParseIds(string? value)
         {
             if (string.IsNullOrWhiteSpace(value))
@@ -344,7 +442,6 @@ namespace VuSaniClientApi.Infrastructure.Repositories.RoleRepository
                     }
 
                     // Update fields
-                    existingRole.Level = request.Level;
                     existingRole.Name = request.Name;
                     existingRole.Description = GeneralHelper.EncodeSingle(request.Description);
                     existingRole.OrganizationId = organizationId;
@@ -356,7 +453,6 @@ namespace VuSaniClientApi.Infrastructure.Repositories.RoleRepository
                     existingRole.YearOfExperience = request.Year_of_experience;
                     existingRole.OtherRequirements = request.Other_requirements;
                     existingRole.SelectOtherRequirements = request.Select_other_requirements;
-                    existingRole.ReportToRole = request.Report_to_role;
                     existingRole.UpdatedBy = userId;
                     existingRole.UpdatedAt = DateTime.UtcNow;
 
@@ -388,7 +484,6 @@ namespace VuSaniClientApi.Infrastructure.Repositories.RoleRepository
                     // Create new role
                     var newRole = new Role
                     {
-                        Level = request.Level,
                         Name = request.Name,
                         Description = GeneralHelper.EncodeSingle(request.Description),
                         OrganizationId = organizationId,
@@ -400,7 +495,6 @@ namespace VuSaniClientApi.Infrastructure.Repositories.RoleRepository
                         YearOfExperience = request.Year_of_experience,
                         OtherRequirements = request.Other_requirements,
                         SelectOtherRequirements = request.Select_other_requirements,
-                        ReportToRole = request.Report_to_role,
                         UniqueId = uniqueId,
                         CreatedBy = userId,
                         CreatedAt = DateTime.UtcNow,
