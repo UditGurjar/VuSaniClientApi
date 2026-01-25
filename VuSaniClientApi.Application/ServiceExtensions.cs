@@ -4,15 +4,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VuSaniClientApi.Application.Services.DepartmentService;
+using VuSaniClientApi.Application.Services.EmployeeService;
+using VuSaniClientApi.Application.Services.HighestQualificationService;
+using VuSaniClientApi.Application.Services.LicenseService;
 using VuSaniClientApi.Application.Services.LoginService;
+using VuSaniClientApi.Application.Services.MasterDataService;
 using VuSaniClientApi.Application.Services.OrganizationService;
 using VuSaniClientApi.Application.Services.PermissionService;
 using VuSaniClientApi.Application.Services.RoleHierarchyService;
 using VuSaniClientApi.Application.Services.RoleService;
 using VuSaniClientApi.Application.Services.SkillService;
-using VuSaniClientApi.Application.Services.LicenseService;
-using VuSaniClientApi.Application.Services.DepartmentService;
-using VuSaniClientApi.Application.Services.HighestQualificationService;
 
 namespace VuSaniClientApi.Application
 {
@@ -29,6 +31,8 @@ namespace VuSaniClientApi.Application
             services.AddScoped<ILicenseService, LicenseService>();
             services.AddScoped<IDepartmentService, DepartmentService>();
             services.AddScoped<IHighestQualificationService, HighestQualificationService>();
+            services.AddScoped<IEmployeeService, EmployeeService>();
+            services.AddScoped<IMasterDataService, MasterDataService>();
             return services;
         }
     }

@@ -162,6 +162,15 @@ namespace VuSaniClientApi.Infrastructure.Helpers
                                     .FirstOrDefaultAsync();
                                 break;
 
+                            case "users":
+                            case "user":
+                                maxUniqueId = await context.Users
+                                    .Where(u => u.UniqueId != null && u.UniqueId.StartsWith(id))
+                                    .OrderByDescending(u => u.Id)
+                                    .Select(u => u.UniqueId)
+                                    .FirstOrDefaultAsync();
+                                break;
+
                             default:
                                 // For unknown tables, throw exception to force explicit table handling
                                 throw new NotSupportedException($"Table '{tableName}' is not supported for unique ID generation. Please add it to the switch statement in GeneralHelper.UniqueIdGeneratorAsync");
@@ -402,6 +411,18 @@ namespace VuSaniClientApi.Infrastructure.Helpers
                         {
                             "organization" => organization.Id.ToString(),
                             "id" => organization.Id.ToString(),
+                            _ => null
+                        };
+
+                    case "users":
+                    case "user":
+                        var user = await context.Users.FindAsync(id);
+                        if (user == null) return null;
+                        return fieldName.ToLower() switch
+                        {
+                            "my_organization" => user.MyOrganization?.ToString(),
+                            "myorganization" => user.MyOrganization?.ToString(),
+                            "organization" => user.MyOrganization?.ToString(),
                             _ => null
                         };
 

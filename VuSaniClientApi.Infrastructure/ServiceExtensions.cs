@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 using VuSaniClientApi.Infrastructure.GenericRepository;
 using VuSaniClientApi.Infrastructure.Repositories.CommonPermissionRepository;
 using VuSaniClientApi.Infrastructure.Repositories.DepartmentRepository;
+using VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository;
 using VuSaniClientApi.Infrastructure.Repositories.HighestQualificationRepository;
 using VuSaniClientApi.Infrastructure.Repositories.LicenseRepository;
 using VuSaniClientApi.Infrastructure.Repositories.LoginRepository;
+using VuSaniClientApi.Infrastructure.Repositories.MasterDataRepository;
 using VuSaniClientApi.Infrastructure.Repositories.OrganizationRepository;
 using VuSaniClientApi.Infrastructure.Repositories.PermissionsRepository;
 using VuSaniClientApi.Infrastructure.Repositories.RoleHierarchyRepository;
@@ -33,7 +35,8 @@ namespace VuSaniClientApi.Infrastructure
             services.AddScoped<IDepartmentRepository, DepartmentRepository>();
             services.AddScoped<IHighestQualificationRepository, HighestQualificationRepository>();
             services.AddScoped<ICommonPermissionRepository, CommonPermissionRepository>();
-
+            services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+            services.AddScoped<IMasterDataRepository, MasterDataRepository>();
 
             return services;
         }
