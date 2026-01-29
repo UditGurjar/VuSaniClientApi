@@ -17,27 +17,11 @@ namespace VuSaniClientApi.Models.DBModels
         [StringLength(255)]
         public string Name { get; set; } = null!;
 
-        public string? Description { get; set; }   // HTML content
-
-        public int? DepartmentId { get; set; }       // optional FK → Department.Id
-        [ForeignKey(nameof(DepartmentId))]
-        public Department? Department { get; set; }
-
-        public int? OrganizationId { get; set; }  
-        [ForeignKey(nameof(OrganizationId))]
-        public Organization? Organization { get; set; }
+        public string? Description { get; set; }  
 
         [StringLength(1)]
-        public string Deleted { get; set; } = "0";
+        public bool Deleted { get; set; } =false;
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public int? CreatedBy { get; set; }
-
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-        public int? UpdatedBy { get; set; }
-
-        [StringLength(100)]
-        public string? UniqueId { get; set; }
     }
 
 }

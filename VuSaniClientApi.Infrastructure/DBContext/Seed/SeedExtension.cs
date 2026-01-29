@@ -24,6 +24,7 @@ namespace VuSaniClientApi.Infrastructure.DBContext.Seed
             RelationShipSeed.Seed(modelBuilder);
             UserSeed.Seed(modelBuilder);
             NextOfKinSeed.Seed(modelBuilder);
+            ReasonForInactiveSeed.Seed(modelBuilder);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -45,6 +45,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.CommonPermissionRepository
 
 
                 case "departments":
+                case "department":
                     return await _db.Department
                         .Where(x => x.Id == recordId)
                         .Select(x => x.OrganizationId)
@@ -52,6 +53,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.CommonPermissionRepository
                         .Select(x => x.Value)
                         .ToListAsync();
 
+                
 
                 default:
                     return new List<int>();

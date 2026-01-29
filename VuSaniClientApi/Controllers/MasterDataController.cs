@@ -2,10 +2,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VuSaniClientApi.Application.Services.MasterDataService;
 
+using VuSaniClientApi.Filters;
+
 namespace VuSaniClientApi.Controllers
 {
     [Route("api/master-data")]
     [ApiController]
+    [Authorize]
     public class MasterDataController : ControllerBase
     {
         private readonly IMasterDataService _masterDataService;
@@ -119,6 +122,8 @@ namespace VuSaniClientApi.Controllers
         /// </summary>
         [Authorize]
         [HttpGet("get-reason-for-inactive")]
+        [SideBarPermissionAttributeTest("view", 374, "reason_for_inactive")]
+
         public async Task<IActionResult> GetReasonForInactive(
             int page = 1,
             int pageSize = 10,

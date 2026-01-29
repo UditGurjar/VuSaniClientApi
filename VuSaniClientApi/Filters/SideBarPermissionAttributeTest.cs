@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -75,7 +75,17 @@ namespace VuSaniClientApi.Filters
                 var modulePermission = permissions.FirstOrDefault(p => p.SidebarId == _moduleId);
                 if (modulePermission == null)
                 {
-                    context.Result = new JsonResult(new { status = false, message = $"No access to module {_moduleId}" }) { StatusCode = 401 };
+                    // Same as Node: fetch sidebar title for message when user has no access
+                    var sidebarRecord = await db.Sidebars.AsNoTracking()
+                        .Where(x => x.Id == _moduleId)
+                        .Select(x => x.Title)
+                        .FirstOrDefaultAsync();
+                    var title = sidebarRecord ?? "this";
+                    context.Result = new JsonResult(new
+                    {
+                        status = false,
+                        message = $"You don't have permission to access {title} module moduleId: {_moduleId} or module is deleted"
+                    }) { StatusCode = 401 };
                     return;
                 }
 
