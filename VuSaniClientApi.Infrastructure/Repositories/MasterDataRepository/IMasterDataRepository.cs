@@ -15,6 +15,9 @@ namespace VuSaniClientApi.Infrastructure.Repositories.MasterDataRepository
         Task<object> GetRelationshipsAsync();
         Task<object> GetReasonForInactiveAsync(int page, int pageSize, bool all, string search, string filter);
         Task<object> GetReasonForInactiveByIdAsync(int id);
+        Task<object> GetDisabilityAsync(int page, int pageSize, bool all, string search, string filter);
+        Task<object> GetDisabilityByIdAsync(int id);
+        Task<object> GetDisabilityDropdownAsync();
     }
 }
 

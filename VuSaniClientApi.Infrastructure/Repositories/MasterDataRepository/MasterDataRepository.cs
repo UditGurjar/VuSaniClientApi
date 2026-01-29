@@ -238,7 +238,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.MasterDataRepository
                         r.Description.Contains(search));
                 }
 
-                // Filter (example – adjust to your real logic)
+                // Filter (example ï¿½ adjust to your real logic)
                 if (!string.IsNullOrWhiteSpace(filter))
                 {
                     query = query.Where(r => r.Name == filter);
@@ -286,6 +286,104 @@ namespace VuSaniClientApi.Infrastructure.Repositories.MasterDataRepository
                 return new { status = true, data = new[] { item } };
             }
             catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<object> GetDisabilityAsync(
+            int page,
+            int pageSize,
+            bool all,
+            string search,
+            string filter)
+        {
+            try
+            {
+                var query = _context.Disabilities.Where(d => !d.Deleted).AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    query = query.Where(d =>
+                        (d.Name != null && d.Name.Contains(search)) ||
+                        (d.Description != null && d.Description.Contains(search)));
+                }
+
+                if (!string.IsNullOrWhiteSpace(filter))
+                {
+                    query = query.Where(d => d.Name == filter);
+                }
+
+                var total = await query.CountAsync();
+
+                if (!all)
+                {
+                    query = query
+                        .Skip((page - 1) * pageSize)
+                        .Take(pageSize);
+                }
+
+                var list = await query
+                    .Select(d => new DisabilityListDto
+                    {
+                        Id = d.Id,
+                        Name = d.Name,
+                        Description = d.Description,
+                        Parent = d.Parent,
+                        IsStatic = d.IsStatic
+                    })
+                    .ToListAsync();
+
+                return new
+                {
+                    status = true,
+                    data = list,
+                    total
+                };
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public async Task<object> GetDisabilityByIdAsync(int id)
+        {
+            try
+            {
+                var item = await _context.Disabilities
+                    .Where(d => !d.Deleted && d.Id == id)
+                    .Select(d => new DisabilityListDto
+                    {
+                        Id = d.Id,
+                        Name = d.Name,
+                        Description = d.Description,
+                        Parent = d.Parent,
+                        IsStatic = d.IsStatic
+                    })
+                    .FirstOrDefaultAsync();
+                if (item == null)
+                    return new { status = false, message = "Record not found", data = (object?)null };
+
+                return new { status = true, data = new[] { item } };
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<object> GetDisabilityDropdownAsync()
+        {
+            try
+            {
+                var list = await _context.Disabilities
+                    .Where(d => !d.Deleted)
+                    .Select(d => new { d.Id, d.Name, d.Parent })
+                    .ToListAsync();
+                return new { status = true, data = list };
+            }
+            catch
             {
                 throw;
             }

@@ -144,6 +144,42 @@ namespace VuSaniClientApi.Application.Services.MasterDataService
                 throw;
             }
         }
+
+        public async Task<object> GetDisabilityAsync(int page = 1, int pageSize = 10, bool all = false, string search = "", string filter = "")
+        {
+            try
+            {
+                return await _masterDataRepository.GetDisabilityAsync(page, pageSize, all, search, filter);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<object> GetDisabilityByIdAsync(int id)
+        {
+            try
+            {
+                return await _masterDataRepository.GetDisabilityByIdAsync(id);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<object> GetDisabilityDropdownAsync()
+        {
+            try
+            {
+                return await _masterDataRepository.GetDisabilityDropdownAsync();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }
 

@@ -145,6 +145,43 @@ namespace VuSaniClientApi.Controllers
             var result = await _masterDataService.GetReasonForInactiveByIdAsync(id);
             return Ok(result);
         }
+
+        /// <summary>
+        /// Get disability list (paginated, with search and filter) - matches Node get-disability
+        /// </summary>
+        [HttpGet("get-disability")]
+        [SideBarPermissionAttributeTest("view", 341, "disability")]
+        public async Task<IActionResult> GetDisability(
+            int page = 1,
+            int pageSize = 10,
+            bool all = false,
+            string search = "",
+            string filter = "")
+        {
+            var result = await _masterDataService.GetDisabilityAsync(page, pageSize, all, search, filter);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Get a single disability by id - matches Node get-disability/:id
+        /// </summary>
+        [HttpGet("get-disability/{id}")]
+        public async Task<IActionResult> GetDisabilityById(int id)
+        {
+            var result = await _masterDataService.GetDisabilityByIdAsync(id);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Get disability dropdown (all non-deleted, id/name/parent) - matches Node get-disability-dropdown
+        /// </summary>
+        [HttpGet("get-disability-dropdown")]
+        public async Task<IActionResult> GetDisabilityDropdown()
+        {
+            var result = await _masterDataService.GetDisabilityDropdownAsync();
+            return Ok(result);
+        }
+
     }
 }
 

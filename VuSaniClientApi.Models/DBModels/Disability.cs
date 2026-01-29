@@ -18,10 +18,8 @@ namespace VuSaniClientApi.Models.DBModels
         public string Name { get; set; } = null!;
 
         public string? Description { get; set; }
-
       
         public bool Deleted { get; set; } = false;
-
         public int? Parent { get; set; }
 
         [ForeignKey(nameof(Parent))]
