@@ -120,6 +120,30 @@ namespace VuSaniClientApi.Application.Services.MasterDataService
                 throw;
             }
         }
+
+        public async Task<object> GetReasonForInactiveAsync(int page = 1, int pageSize = 10, bool all = false, string search = "", string filter = "")
+        {
+            try
+            {
+                return await _masterDataRepository.GetReasonForInactiveAsync(page, pageSize, all, search, filter);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<object> GetReasonForInactiveByIdAsync(int id)
+        {
+            try
+            {
+                return await _masterDataRepository.GetReasonForInactiveByIdAsync(id);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
     }
 }
 

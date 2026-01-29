@@ -113,6 +113,33 @@ namespace VuSaniClientApi.Controllers
             var result = await _masterDataService.GetRelationshipsAsync();
             return Ok(result);
         }
+
+        /// <summary>
+        /// Get all reason for inactive (paginated, with search and filter) - matches Node get-reason-for-inactive
+        /// </summary>
+        [Authorize]
+        [HttpGet("get-reason-for-inactive")]
+        public async Task<IActionResult> GetReasonForInactive(
+            int page = 1,
+            int pageSize = 10,
+            bool all = false,
+            string search = "",
+            string filter = "")
+        {
+            var result = await _masterDataService.GetReasonForInactiveAsync(page, pageSize, all, search, filter);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Get a single reason for inactive by id - matches Node get-reason-for-inactive/:id
+        /// </summary>
+        [Authorize]
+        [HttpGet("get-reason-for-inactive/{id}")]
+        public async Task<IActionResult> GetReasonForInactiveById(int id)
+        {
+            var result = await _masterDataService.GetReasonForInactiveByIdAsync(id);
+            return Ok(result);
+        }
     }
 }
 

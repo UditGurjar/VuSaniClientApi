@@ -303,11 +303,12 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                 {
                     UniqueId = uniqueId,
                     UniqueIdStatus = "automatic",
+                    // Step 0: Personal Information
                     Name = request.Name,
                     Surname = request.Surname,
                     Email = request.Email,
                     Phone = request.Phone,
-                    Profile = request.Profile ?? "profile/default_profile.png",
+                    Profile = request.ProfilePath ?? "profile/default_profile.png",
                     GenderId = request.Gender,
                     IdNumber = request.IdNumber,
                     PassportNumber = request.PassportNumber,
@@ -316,7 +317,6 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     Age = age ?? request.Age,
                     MaritalStatus = request.MaritalStatus,
                     NationalId = request.NationalId,
-                    WorkPermitExpiryDate = request.WorkPermitExpiryDate,
                     LanguageId = request.Language,
                     RaceId = string.IsNullOrEmpty(request.Race) ? null : int.TryParse(request.Race, out int raceId) ? raceId : null,
                     PersonWithDisabilities = request.PersonWithDisabilities,
@@ -326,46 +326,26 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     CityId = request.City,
                     ResidentialAddress = request.ResidentialAddress,
                     PostalAddress = request.PostalAddress,
-                    CurrentAddress = request.CurrentAddress,
                     HighestQualificationId = request.HighestQualification,
                     NameOfQualification = request.NameOfQualification,
-                    Skills = request.Skills,
-                    License = request.License,
                     MyOrganization = organizationId,
                     OrganizationId = organizationId,
+                    // Step 1: Employment Information
                     Department = request.Department ?? request.EmployeeDepartment,
+                    EmployeeDepartment = request.EmployeeDepartment,
+                    EmployeeDepartmentInfo = request.EmployeeDepartmentInfo,
                     RoleId = request.Role,
                     RoleDesc = GeneralHelper.EncodeSingle(request.RoleDescription),
                     EmployeeTypeId = request.EmployeeType,
                     EmploymentStatus = request.EmploymentStatus,
                     DateOfEmployment = request.DateOfEmployment,
-                    JoiningDate = request.JoiningDate,
-                    EndDate = request.EndDate,
                     StartProbationPeriod = request.StartProbationPeriod,
                     EndProbationPeriod = request.EndProbationPeriod,
-                    ProbationPeriod = request.ProbationPeriod,
-                    HierarchyLevel = request.HierarchyLevel,
-                    Manager = request.Manager,
-                    IncomeTaxNumber = request.IncomeTaxNumber,
-                    TaxResidencyStatus = request.TaxResidencyStatus,
-                    BankName = request.BankName,
-                    AccountNumber = request.AccountNumber,
-                    BranchCode = request.BranchCode,
-                    AccountType = request.AccountType,
-                    BloodType = request.BloodType,
-                    Allergies = request.Allergies,
-                    CurrentMedications = request.CurrentMedications,
-                    VaccinationRecords = request.VaccinationRecords,
-                    PreEmploymentCheck = request.PreEmploymentCheck,
-                    PostEmploymentCheck = request.PostEmploymentCheck,
-                    EmploymentChecklist = request.EmploymentChecklist,
+                    DateOfTermination = request.DateOfTermination,
+                    ReasonForEmployeeBecomingInactive = request.ReasonForEmployeeBecomingInactive,
+                    // Multi-step tracking
                     ActiveStep = request.ActiveStep,
                     CompletedStep = request.CompletedStep,
-                    Accountability = request.Accountability,
-                    Level = request.Level,
-                    DdrmId = request.DdrmId,
-                    PermitLicense = request.PermitLicense,
-                    EmployeeDepartmentInfo = request.EmployeeDepartmentInfo,
                     CreatedBy = userId,
                     CreatedAt = DateTime.UtcNow,
                     Deleted = false
@@ -390,7 +370,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                 }
 
                 // Insert activity log
-                await GeneralHelper.InsertActivityLogAsync(_context, userId, "create", "Employee", newEmployee.Id);
+                //await GeneralHelper.InsertActivityLogAsync(_context, userId, "create", "Employee", newEmployee.Id);
 
                 return new { status = true, message = "Record created successfully", id = newEmployee.Id };
             }
@@ -445,72 +425,65 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     }
                 }
 
-                // Update fields
-                employee.Name = request.Name ?? employee.Name;
-                employee.Surname = request.Surname ?? employee.Surname;
-                employee.Email = request.Email ?? employee.Email;
-                employee.Phone = request.Phone ?? employee.Phone;
-                employee.GenderId = request.Gender ?? employee.GenderId;
-                employee.IdNumber = request.IdNumber ?? employee.IdNumber;
-                employee.PassportNumber = request.PassportNumber ?? employee.PassportNumber;
-                employee.VisaNumber = request.VisaNumber ?? employee.VisaNumber;
-                employee.DateOfBirth = request.DateOfBirth ?? employee.DateOfBirth;
-                employee.Age = request.Age ?? employee.Age;
-                employee.MaritalStatus = request.MaritalStatus ?? employee.MaritalStatus;
-                employee.NationalId = request.NationalId ?? employee.NationalId;
-                employee.WorkPermitExpiryDate = request.WorkPermitExpiryDate ?? employee.WorkPermitExpiryDate;
-                employee.LanguageId = request.Language ?? employee.LanguageId;
-                employee.RaceId = string.IsNullOrEmpty(request.Race) ? employee.RaceId : int.TryParse(request.Race, out int raceId) ? raceId : employee.RaceId;
-                employee.PersonWithDisabilities = request.PersonWithDisabilities ?? employee.PersonWithDisabilities;
-                employee.Disability = request.Disability ?? employee.Disability;
-                employee.CountryId = request.Country ?? employee.CountryId;
-                employee.StateId = request.State ?? employee.StateId;
-                employee.CityId = request.City ?? employee.CityId;
-                employee.ResidentialAddress = request.ResidentialAddress ?? employee.ResidentialAddress;
-                employee.PostalAddress = request.PostalAddress ?? employee.PostalAddress;
-                employee.CurrentAddress = request.CurrentAddress ?? employee.CurrentAddress;
-                employee.HighestQualificationId = request.HighestQualification ?? employee.HighestQualificationId;
-                employee.NameOfQualification = request.NameOfQualification ?? employee.NameOfQualification;
-                employee.Skills = request.Skills ?? employee.Skills;
-                employee.License = request.License ?? employee.License;
-                employee.MyOrganization = organizationId;
-                employee.OrganizationId = organizationId;
-                employee.Department = request.Department ?? request.EmployeeDepartment ?? employee.Department;
-                employee.RoleId = request.Role ?? employee.RoleId;
-                employee.RoleDesc = !string.IsNullOrEmpty(request.RoleDescription) 
-                    ? GeneralHelper.EncodeSingle(request.RoleDescription) 
-                    : employee.RoleDesc;
-                employee.EmployeeTypeId = request.EmployeeType ?? employee.EmployeeTypeId;
-                employee.EmploymentStatus = request.EmploymentStatus ?? employee.EmploymentStatus;
-                employee.DateOfEmployment = request.DateOfEmployment ?? employee.DateOfEmployment;
-                employee.JoiningDate = request.JoiningDate ?? employee.JoiningDate;
-                employee.EndDate = request.EndDate ?? employee.EndDate;
-                employee.StartProbationPeriod = request.StartProbationPeriod ?? employee.StartProbationPeriod;
-                employee.EndProbationPeriod = request.EndProbationPeriod ?? employee.EndProbationPeriod;
-                employee.ProbationPeriod = request.ProbationPeriod ?? employee.ProbationPeriod;
-                employee.HierarchyLevel = request.HierarchyLevel ?? employee.HierarchyLevel;
-                employee.Manager = request.Manager ?? employee.Manager;
-                employee.IncomeTaxNumber = request.IncomeTaxNumber ?? employee.IncomeTaxNumber;
-                employee.TaxResidencyStatus = request.TaxResidencyStatus ?? employee.TaxResidencyStatus;
-                employee.BankName = request.BankName ?? employee.BankName;
-                employee.AccountNumber = request.AccountNumber ?? employee.AccountNumber;
-                employee.BranchCode = request.BranchCode ?? employee.BranchCode;
-                employee.AccountType = request.AccountType ?? employee.AccountType;
-                employee.BloodType = request.BloodType ?? employee.BloodType;
-                employee.Allergies = request.Allergies ?? employee.Allergies;
-                employee.CurrentMedications = request.CurrentMedications ?? employee.CurrentMedications;
-                employee.VaccinationRecords = request.VaccinationRecords ?? employee.VaccinationRecords;
-                employee.PreEmploymentCheck = request.PreEmploymentCheck ?? employee.PreEmploymentCheck;
-                employee.PostEmploymentCheck = request.PostEmploymentCheck ?? employee.PostEmploymentCheck;
-                employee.EmploymentChecklist = request.EmploymentChecklist ?? employee.EmploymentChecklist;
-                employee.ActiveStep = request.ActiveStep ?? employee.ActiveStep;
-                employee.CompletedStep = request.CompletedStep ?? employee.CompletedStep;
-                employee.Accountability = request.Accountability ?? employee.Accountability;
-                employee.Level = request.Level ?? employee.Level;
-                employee.DdrmId = request.DdrmId ?? employee.DdrmId;
-                employee.Profile = request.Profile ?? employee.Profile;
-                employee.PermitLicense = request.PermitLicense ?? employee.PermitLicense;
-                employee.EmployeeDepartmentInfo = request.EmployeeDepartmentInfo ?? employee.EmployeeDepartmentInfo;
+                // Update fields - Step 0: Personal Information
+                if (request.Name != null) employee.Name = request.Name;
+                if (request.Surname != null) employee.Surname = request.Surname;
+                if (request.Email != null) employee.Email = request.Email;
+                if (request.Phone != null) employee.Phone = request.Phone;
+                if (request.Gender.HasValue) employee.GenderId = request.Gender;
+                if (request.IdNumber != null) employee.IdNumber = request.IdNumber;
+                if (request.PassportNumber != null) employee.PassportNumber = request.PassportNumber;
+                if (request.VisaNumber != null) employee.VisaNumber = request.VisaNumber;
+                if (request.DateOfBirth.HasValue) employee.DateOfBirth = request.DateOfBirth;
+                if (request.Age.HasValue) employee.Age = request.Age;
+                if (request.MaritalStatus != null) employee.MaritalStatus = request.MaritalStatus;
+                if (request.NationalId != null) employee.NationalId = request.NationalId;
+                if (request.Language.HasValue) employee.LanguageId = request.Language;
+                if (!string.IsNullOrEmpty(request.Race))
+                {
+                    if (int.TryParse(request.Race, out int raceId))
+                        employee.RaceId = raceId;
+                }
+                if (request.PersonWithDisabilities != null) employee.PersonWithDisabilities = request.PersonWithDisabilities;
+                if (request.Disability != null) employee.Disability = request.Disability;
+                if (request.Country.HasValue) employee.CountryId = request.Country;
+                if (request.State.HasValue) employee.StateId = request.State;
+                if (request.City.HasValue) employee.CityId = request.City;
+                if (request.ResidentialAddress != null) employee.ResidentialAddress = request.ResidentialAddress;
+                if (request.PostalAddress != null) employee.PostalAddress = request.PostalAddress;
+                if (request.HighestQualification.HasValue) employee.HighestQualificationId = request.HighestQualification;
+                if (request.NameOfQualification != null) employee.NameOfQualification = request.NameOfQualification;
+                if (!string.IsNullOrEmpty(request.ProfilePath)) employee.Profile = request.ProfilePath;
+                
+                // Update organization if provided
+                if (organizationId.HasValue)
+                {
+                    employee.MyOrganization = organizationId.Value;
+                    employee.OrganizationId = organizationId.Value;
+                }
+                
+                // Update fields - Step 1: Employment Information
+                if (request.Department.HasValue || request.EmployeeDepartment.HasValue)
+                {
+                    employee.Department = request.Department ?? request.EmployeeDepartment ?? employee.Department;
+                    employee.EmployeeDepartment = request.EmployeeDepartment ?? employee.EmployeeDepartment;
+                }
+                if (request.EmployeeDepartmentInfo.HasValue) employee.EmployeeDepartmentInfo = request.EmployeeDepartmentInfo;
+                if (request.Role.HasValue) employee.RoleId = request.Role;
+                if (!string.IsNullOrEmpty(request.RoleDescription))
+                    employee.RoleDesc = GeneralHelper.EncodeSingle(request.RoleDescription);
+                if (request.EmployeeType.HasValue) employee.EmployeeTypeId = request.EmployeeType;
+                if (request.EmploymentStatus != null) employee.EmploymentStatus = request.EmploymentStatus;
+                if (request.DateOfEmployment.HasValue) employee.DateOfEmployment = request.DateOfEmployment;
+                if (request.StartProbationPeriod.HasValue) employee.StartProbationPeriod = request.StartProbationPeriod;
+                if (request.EndProbationPeriod.HasValue) employee.EndProbationPeriod = request.EndProbationPeriod;
+                if (request.DateOfTermination.HasValue) employee.DateOfTermination = request.DateOfTermination;
+                if (request.ReasonForEmployeeBecomingInactive.HasValue) employee.ReasonForEmployeeBecomingInactive = request.ReasonForEmployeeBecomingInactive;
+                
+                // Multi-step tracking
+                if (request.ActiveStep.HasValue) employee.ActiveStep = request.ActiveStep;
+                if (request.CompletedStep != null) employee.CompletedStep = request.CompletedStep;
+                
                 employee.UpdatedBy = userId;
                 employee.UpdatedAt = DateTime.UtcNow;
 

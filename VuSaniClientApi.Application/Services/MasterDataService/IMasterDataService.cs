@@ -13,6 +13,8 @@ namespace VuSaniClientApi.Application.Services.MasterDataService
         Task<object> GetEmployeeTypesAsync();
         Task<object> GetBanksAsync();
         Task<object> GetRelationshipsAsync();
+        Task<object> GetReasonForInactiveAsync(int page = 1, int pageSize = 10, bool all = false, string search = "", string filter = "");
+        Task<object> GetReasonForInactiveByIdAsync(int id);
     }
 }
 
