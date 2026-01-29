@@ -33,6 +33,8 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                             from role in roleGroup.DefaultIfEmpty()
                             join gender in _context.Genders on user.GenderId equals gender.Id into genderGroup
                             from gender in genderGroup.DefaultIfEmpty()
+                            join race in _context.Races on user.RaceId equals race.Id into raceGroup
+                            from race in raceGroup.DefaultIfEmpty()
                             join empType in _context.EmployeeTypes on user.EmployeeTypeId equals empType.Id into empTypeGroup
                             from empType in empTypeGroup.DefaultIfEmpty()
                             join country in _context.Countries on user.CountryId equals country.Id into countryGroup
@@ -48,7 +50,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                             join createdUser in _context.Users on user.CreatedBy equals createdUser.Id into createdGroup
                             from createdUser in createdGroup.DefaultIfEmpty()
                             where user.Deleted == false
-                            select new { user, org, role, gender, empType, country, state, city, qual, dept, createdUser };
+                            select new { user, org, role, race,gender, empType, country, state, city, qual, dept, createdUser };
 
                 // Search filter
                 if (!string.IsNullOrWhiteSpace(search))
@@ -109,6 +111,8 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     StateName = x.state?.Name,
                     City = x.user.CityId,
                     CityName = x.city?.Name,
+                    Race=x.user?.Race?.Id,
+                    RaceName=x.user?.Race?.Name,
                     CurrentAddress = x.user.CurrentAddress,
                     HighestQualification = x.user.HighestQualificationId,
                     HighestQualificationName = x.qual?.Name,
@@ -149,6 +153,8 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                                      from role in roleGroup.DefaultIfEmpty()
                                      join gender in _context.Genders on user.GenderId equals gender.Id into genderGroup
                                      from gender in genderGroup.DefaultIfEmpty()
+                                     join race in _context.Races on user.RaceId equals race.Id into raceGroup
+                                     from race in raceGroup.DefaultIfEmpty()
                                      join empType in _context.EmployeeTypes on user.EmployeeTypeId equals empType.Id into empTypeGroup
                                      from empType in empTypeGroup.DefaultIfEmpty()
                                      join country in _context.Countries on user.CountryId equals country.Id into countryGroup
@@ -166,7 +172,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                                      join manager in _context.Users on user.Manager equals manager.Id into managerGroup
                                      from manager in managerGroup.DefaultIfEmpty()
                                      where user.Id == id && user.Deleted == false
-                                     select new { user, org, role, gender, empType, country, state, city, qual, dept, lang, manager })
+                                     select new { user, org, role,race, gender, empType, country, state, city, qual, dept, lang, manager })
                                     .FirstOrDefaultAsync();
 
                 if (rawData == null)
@@ -223,7 +229,8 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     NameOfQualification = rawData.user.NameOfQualification,
                     Skills = SafeParseIds(rawData.user.Skills),
                     License = SafeParseIds(rawData.user.License),
-                    Race = rawData.user.RaceId?.ToString(),
+                    Race = rawData.user.Race?.Id,
+                    RaceName = rawData.user.Race.Name?.ToString(),
                     PersonWithDisabilities = rawData.user.PersonWithDisabilities,
                     Disability = rawData.user.Disability,
                     Language = rawData.user.LanguageId,

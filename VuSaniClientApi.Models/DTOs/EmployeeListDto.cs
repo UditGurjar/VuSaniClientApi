@@ -73,11 +73,15 @@ namespace VuSaniClientApi.Models.DTOs
         // Manager
         public int? Manager { get; set; }
         public string? ManagerName { get; set; }
-        
+
         // Additional fields for detail view
-        public string? Race { get; set; }
+        public int? Race { get; set; }
+        public string? RaceName { get; set; }
         public string? PersonWithDisabilities { get; set; }
         public string? Disability { get; set; }
+        // ? correct
+        //public List<int> Disability { get; set; } = new();
+        //public List<string> DisabilityName { get; set; } = new();
         public int? Language { get; set; }
         public string? LanguageName { get; set; }
         public string? ResidentialAddress { get; set; }

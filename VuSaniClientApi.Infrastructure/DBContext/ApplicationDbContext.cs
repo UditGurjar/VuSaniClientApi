@@ -36,6 +36,7 @@ namespace VuSaniClientApi.Infrastructure.DBContext
         public DbSet<Disability> Disabilities { get; set; }
         public DbSet<Sidebar> Sidebars { get; set; }
         public DbSet<Department> Department { get; set; }
+        public DbSet<Race> Races { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
