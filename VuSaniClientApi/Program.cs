@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
@@ -7,6 +7,7 @@ using VuSaniClientApi.Application;
 using VuSaniClientApi.Authentication;
 using VuSaniClientApi.Infrastructure;
 using VuSaniClientApi.Infrastructure.DBContext;
+using VuSaniClientApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 // Serilog configuration
@@ -34,6 +35,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices();
+//builder.Services.AddHostedService<TerminationNotificationHostedService>();
 builder.Services.RegisterJwtAuthentication(builder.Configuration);
 
 // ✅ Configure CORS for Angular (default port 4200)

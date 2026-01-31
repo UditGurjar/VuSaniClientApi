@@ -26,6 +26,8 @@ namespace VuSaniClientApi.Models.DTOs
         // Organization & Role
         public int? MyOrganization { get; set; }
         public string? OrganizationName { get; set; }
+        /// <summary>Work location from organization's business address (same as Node.js: organization.business_address as work_location).</summary>
+        public string? BusinessAddress { get; set; }
         public int? Department { get; set; }
         public string? DepartmentName { get; set; }
         public int? Role { get; set; }
@@ -93,11 +95,29 @@ namespace VuSaniClientApi.Models.DTOs
         public string? BankName { get; set; }
         public string? AccountNumber { get; set; }
         public int? HierarchyLevel { get; set; }
+        /// <summary>Display name from role_hierarchy (same as Node.js hierarchy_level_name).</summary>
+        public string? HierarchyLevelName { get; set; }
         public string? Accountability { get; set; }
+        public int? ReasonForEmployeeBecomingInactive { get; set; }
+        /// <summary>Display name from reason_for_inactive (same as Node.js reason_for_employee_becoming_inactive_name).</summary>
+        public string? ReasonForEmployeeBecomingInactiveName { get; set; }
         public string? Level { get; set; }
         public string? ProbationPeriod { get; set; }
         public DateTime? StartProbationPeriod { get; set; }
         public DateTime? EndProbationPeriod { get; set; }
+
+        /// <summary>
+        /// Emergency contact details from NextOfKin table (contact_name, employee = relationship id, contact_number, relation_name).
+        /// </summary>
+        public List<EmergencyContactItemDto> EmergencyContactDetails { get; set; } = new();
+    }
+
+    public class EmergencyContactItemDto
+    {
+        public string? ContactName { get; set; }
+        public int? Employee { get; set; } // RelationshipId
+        public string? ContactNumber { get; set; }
+        public string? RelationName { get; set; }
     }
 }
 

@@ -289,7 +289,7 @@ namespace VuSaniClientApi.Infrastructure.Helpers
             {
                 status = status.ToLower();
                 string message = "";
-
+                return;
                 switch (status)
                 {
                     case "update":

@@ -74,7 +74,8 @@ namespace VuSaniClientApi.Models.DTOs
         public DateTime? StartProbationPeriod { get; set; }
         public DateTime? EndProbationPeriod { get; set; }
         public DateTime? DateOfTermination { get; set; }
-        
+        public string? EmergencyContactDetails { get; set; }
+
         // Termination
         public int? ReasonForEmployeeBecomingInactive { get; set; }
         
@@ -83,6 +84,7 @@ namespace VuSaniClientApi.Models.DTOs
         // ============================================
         public int? ActiveStep { get; set; } // 0 = Personal Information, 1 = Employment Information
         public string? CompletedStep { get; set; } // JSON string like "[true, false]" for [Step0, Step1]
+
     }
 }
 

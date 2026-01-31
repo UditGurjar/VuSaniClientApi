@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using VuSaniClientApi.Infrastructure.DBContext;
 using VuSaniClientApi.Infrastructure.Helpers;
@@ -49,8 +50,12 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                             from dept in deptGroup.DefaultIfEmpty()
                             join createdUser in _context.Users on user.CreatedBy equals createdUser.Id into createdGroup
                             from createdUser in createdGroup.DefaultIfEmpty()
+                            join reasonForInactive in _context.ReasonForInactives on user.ReasonForEmployeeBecomingInactive equals reasonForInactive.Id into reasonGroup
+                            from reasonForInactive in reasonGroup.DefaultIfEmpty()
+                            join roleHierarchy in _context.RoleHierarchies on user.HierarchyLevel equals roleHierarchy.Id into hierarchyGroup
+                            from roleHierarchy in hierarchyGroup.DefaultIfEmpty()
                             where user.Deleted == false
-                            select new { user, org, role, race,gender, empType, country, state, city, qual, dept, createdUser };
+                            select new { user, org, role, race, gender, empType, country, state, city, qual, dept, createdUser, reasonForInactive, roleHierarchy };
 
                 // Search filter
                 if (!string.IsNullOrWhiteSpace(search))
@@ -94,6 +99,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     NationalId = x.user.NationalId,
                     MyOrganization = x.user.MyOrganization,
                     OrganizationName = x.org?.Name,
+                    BusinessAddress = x.org?.BusinessAddress,
                     Department = x.user.Department,
                     DepartmentName = x.dept?.Name,
                     Role = x.user.RoleId,
@@ -111,8 +117,8 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     StateName = x.state?.Name,
                     City = x.user.CityId,
                     CityName = x.city?.Name,
-                    Race=x.user?.Race?.Id,
-                    RaceName=x.user?.Race?.Name,
+                    Race = x.user.RaceId,
+                    RaceName = x.race?.Name,
                     CurrentAddress = x.user.CurrentAddress,
                     HighestQualification = x.user.HighestQualificationId,
                     HighestQualificationName = x.qual?.Name,
@@ -124,7 +130,11 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     CreatedBy = x.user.CreatedBy,
                     CreatedByName = x.createdUser != null ? $"{x.createdUser.Name} {x.createdUser.Surname}" : null,
                     CreatedAt = x.user.CreatedAt,
-                    Manager = x.user.Manager
+                    Manager = x.user.Manager,
+                    HierarchyLevel = x.user.HierarchyLevel,
+                    HierarchyLevelName = x.roleHierarchy?.Name,
+                    ReasonForEmployeeBecomingInactive = x.user.ReasonForEmployeeBecomingInactive,
+                    ReasonForEmployeeBecomingInactiveName = x.reasonForInactive?.Name
                 }).ToList();
 
                 return new
@@ -171,8 +181,16 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                                      from lang in langGroup.DefaultIfEmpty()
                                      join manager in _context.Users on user.Manager equals manager.Id into managerGroup
                                      from manager in managerGroup.DefaultIfEmpty()
+                                     join createdUser in _context.Users on user.CreatedBy equals createdUser.Id into createdGroup
+                                     from createdUser in createdGroup.DefaultIfEmpty()
+                                     join updatedUser in _context.Users on user.UpdatedBy equals updatedUser.Id into updatedGroup
+                                     from updatedUser in updatedGroup.DefaultIfEmpty()
+                                     join reasonForInactive in _context.ReasonForInactives on user.ReasonForEmployeeBecomingInactive equals reasonForInactive.Id into reasonGroup
+                                     from reasonForInactive in reasonGroup.DefaultIfEmpty()
+                                     join roleHierarchy in _context.RoleHierarchies on user.HierarchyLevel equals roleHierarchy.Id into hierarchyGroup
+                                     from roleHierarchy in hierarchyGroup.DefaultIfEmpty()
                                      where user.Id == id && user.Deleted == false
-                                     select new { user, org, role,race, gender, empType, country, state, city, qual, dept, lang, manager })
+                                     select new { user, org, role, race, gender, empType, country, state, city, qual, dept, lang, manager, createdUser, updatedUser, reasonForInactive, roleHierarchy })
                                     .FirstOrDefaultAsync();
 
                 if (rawData == null)
@@ -201,6 +219,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     WorkPermitExpiryDate = rawData.user.WorkPermitExpiryDate,
                     MyOrganization = rawData.user.MyOrganization,
                     OrganizationName = rawData.org?.Name,
+                    BusinessAddress = rawData.org?.BusinessAddress,
                     Department = rawData.user.Department,
                     DepartmentName = rawData.dept?.Name,
                     Role = rawData.user.RoleId,
@@ -229,8 +248,8 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     NameOfQualification = rawData.user.NameOfQualification,
                     Skills = SafeParseIds(rawData.user.Skills),
                     License = SafeParseIds(rawData.user.License),
-                    Race = rawData.user.Race?.Id,
-                    RaceName = rawData.user.Race.Name?.ToString(),
+                    Race = rawData.user.RaceId,
+                    RaceName = rawData.race?.Name,
                     PersonWithDisabilities = rawData.user.PersonWithDisabilities,
                     Disability = rawData.user.Disability,
                     Language = rawData.user.LanguageId,
@@ -240,17 +259,35 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     BankName = rawData.user.BankName,
                     AccountNumber = rawData.user.AccountNumber,
                     HierarchyLevel = rawData.user.HierarchyLevel,
+                    HierarchyLevelName = rawData.roleHierarchy?.Name,
                     Manager = rawData.user.Manager,
                     ManagerName = rawData.manager != null ? $"{rawData.manager.Name} {rawData.manager.Surname}" : null,
                     Accountability = rawData.user.Accountability,
                     Level = rawData.user.Level,
+                    ReasonForEmployeeBecomingInactive = rawData.user.ReasonForEmployeeBecomingInactive,
+                    ReasonForEmployeeBecomingInactiveName = rawData.reasonForInactive?.Name,
                     ActiveStep = rawData.user.ActiveStep,
                     CompletedStep = SafeParseBoolArray(rawData.user.CompletedStep),
                     CreatedBy = rawData.user.CreatedBy,
+                    CreatedByName = rawData.createdUser != null ? $"{rawData.createdUser.Name} {rawData.createdUser.Surname}" : null,
                     CreatedAt = rawData.user.CreatedAt,
                     UpdatedBy = rawData.user.UpdatedBy,
+                    UpdatedByName = rawData.updatedUser != null ? $"{rawData.updatedUser.Name} {rawData.updatedUser.Surname}" : null,
                     UpdatedAt = rawData.user.UpdatedAt
                 };
+
+                // Load emergency contact details from NextOfKin table
+                var nextOfKins = await _context.NextOfKins
+                    .Where(n => n.UserId == id)
+                    .Include(n => n.RelationShip)
+                    .ToListAsync();
+                employee.EmergencyContactDetails = nextOfKins.Select(n => new EmergencyContactItemDto
+                {
+                    ContactName = n.Name,
+                    Employee = n.RelationshipId,
+                    ContactNumber = n.ContactNumber,
+                    RelationName = n.RelationShip?.Name
+                }).ToList();
 
                 return new { status = true, data = employee };
             }
@@ -294,6 +331,11 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                         organizationId = dept[0].OrganizationId;
                     }
                 }
+
+                // If Date of Termination is in the past, set Employment Status to Inactive
+                var employmentStatus = request.EmploymentStatus;
+                if (request.DateOfTermination.HasValue && request.DateOfTermination.Value.Date < DateTime.UtcNow.Date)
+                    employmentStatus = "Inactive";
 
                 // Generate unique ID
                 var uniqueId = await GeneralHelper.UniqueIdGeneratorAsync(
@@ -344,7 +386,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     RoleId = request.Role,
                     RoleDesc = GeneralHelper.EncodeSingle(request.RoleDescription),
                     EmployeeTypeId = request.EmployeeType,
-                    EmploymentStatus = request.EmploymentStatus,
+                    EmploymentStatus = employmentStatus ?? request.EmploymentStatus,
                     DateOfEmployment = request.DateOfEmployment,
                     StartProbationPeriod = request.StartProbationPeriod,
                     EndProbationPeriod = request.EndProbationPeriod,
@@ -360,6 +402,23 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
 
                 _context.Users.Add(newEmployee);
                 await _context.SaveChangesAsync();
+
+                // Save emergency contacts to NextOfKin table
+                if (!string.IsNullOrWhiteSpace(request.EmergencyContactDetails))
+                {
+                    var emergencyContacts = ParseEmergencyContactDetails(request.EmergencyContactDetails);
+                    foreach (var ec in emergencyContacts)
+                    {
+                        _context.NextOfKins.Add(new NextOfKin
+                        {
+                            UserId = newEmployee.Id,
+                            Name = ec.ContactName ?? string.Empty,
+                            RelationshipId = ec.Employee,
+                            ContactNumber = ec.ContactNumber ?? string.Empty
+                        });
+                    }
+                    await _context.SaveChangesAsync();
+                }
 
                 // Copy permissions from role if role is assigned
                 if (request.Role.HasValue)
@@ -484,7 +543,12 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                 if (request.DateOfEmployment.HasValue) employee.DateOfEmployment = request.DateOfEmployment;
                 if (request.StartProbationPeriod.HasValue) employee.StartProbationPeriod = request.StartProbationPeriod;
                 if (request.EndProbationPeriod.HasValue) employee.EndProbationPeriod = request.EndProbationPeriod;
-                if (request.DateOfTermination.HasValue) employee.DateOfTermination = request.DateOfTermination;
+                if (request.DateOfTermination.HasValue)
+                {
+                    employee.DateOfTermination = request.DateOfTermination;
+                    if (request.DateOfTermination.Value.Date < DateTime.UtcNow.Date)
+                        employee.EmploymentStatus = "Inactive";
+                }
                 if (request.ReasonForEmployeeBecomingInactive.HasValue) employee.ReasonForEmployeeBecomingInactive = request.ReasonForEmployeeBecomingInactive;
                 
                 // Multi-step tracking
@@ -494,6 +558,25 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                 employee.UpdatedBy = userId;
                 employee.UpdatedAt = DateTime.UtcNow;
 
+                await _context.SaveChangesAsync();
+
+                // Sync emergency contacts (NextOfKin): remove existing, add from request
+                var existingNextOfKins = await _context.NextOfKins.Where(n => n.UserId == request.Id).ToListAsync();
+                _context.NextOfKins.RemoveRange(existingNextOfKins);
+                if (!string.IsNullOrWhiteSpace(request.EmergencyContactDetails))
+                {
+                    var emergencyContacts = ParseEmergencyContactDetails(request.EmergencyContactDetails);
+                    foreach (var ec in emergencyContacts)
+                    {
+                        _context.NextOfKins.Add(new NextOfKin
+                        {
+                            UserId = request.Id.Value,
+                            Name = ec.ContactName ?? string.Empty,
+                            RelationshipId = ec.Employee,
+                            ContactNumber = ec.ContactNumber ?? string.Empty
+                        });
+                    }
+                }
                 await _context.SaveChangesAsync();
 
                 // Update permissions from role if role is changed
@@ -522,31 +605,31 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
             }
         }
 
-        public async Task<object> DeleteEmployeeAsync(int id, int userId)
+        public async Task<DeleteEmployeeResponse> DeleteEmployeeAsync(int id, int userId)
         {
             try
             {
                 var employee = await _context.Users.FirstOrDefaultAsync(u => u.Id == id && u.Deleted == false);
-                
+
                 if (employee == null)
                 {
-                    return new { status = false, message = "User Not Found" };
+                    return new DeleteEmployeeResponse { Status = false, Message = "User Not Found" };
                 }
 
-                // Check if user is super admin
+                // Check if user is super admin ( is_super_admin == 1)
                 if (employee.IsSuperAdmin == 1)
                 {
-                    return new { status = false, message = "You Can't Delete Super Admin" };
+                    return new DeleteEmployeeResponse { Status = false, Message = "You Can't Delete Super Admin" };
                 }
 
-                // Soft delete
+                // Soft delete 
                 employee.Deleted = true;
                 await _context.SaveChangesAsync();
 
-                // Insert activity log
+                // Insert activity log (insertActivityLog)
                 await GeneralHelper.InsertActivityLogAsync(_context, userId, "delete", "Users", id);
 
-                return new { status = true, message = "Record deleted successfully" };
+                return new DeleteEmployeeResponse { Status = true, Message = "Record deleted successfully" };
             }
             catch (Exception)
             {
@@ -634,6 +717,33 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
             {
                 return new List<bool>();
             }
+        }
+
+        private static List<EmergencyContactInput> ParseEmergencyContactDetails(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+                return new List<EmergencyContactInput>();
+
+            try
+            {
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                var list = JsonSerializer.Deserialize<List<EmergencyContactInput>>(json, options);
+                return list ?? new List<EmergencyContactInput>();
+            }
+            catch
+            {
+                return new List<EmergencyContactInput>();
+            }
+        }
+
+        private class EmergencyContactInput
+        {
+            [JsonPropertyName("contact_name")]
+            public string? ContactName { get; set; }
+            [JsonPropertyName("employee")]
+            public int? Employee { get; set; }
+            [JsonPropertyName("contact_number")]
+            public string? ContactNumber { get; set; }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using VuSaniClientApi.Infrastructure.DBContext.Seed;
 using VuSaniClientApi.Models.DBModels;
@@ -38,6 +38,7 @@ namespace VuSaniClientApi.Infrastructure.DBContext
         public DbSet<Department> Department { get; set; }
         public DbSet<Race> Races { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
+        public DbSet<TerminationNotificationLog> TerminationNotificationLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -91,6 +92,9 @@ namespace VuSaniClientApi.Infrastructure.DBContext
                 .WithMany(rh => rh.OrganizationRoleHierarchies)
                 .HasForeignKey(orh => orh.RoleHierarchyId);
 
+            modelBuilder.Entity<TerminationNotificationLog>()
+                .HasIndex(t => new { t.UserId, t.IntervalDays })
+                .IsUnique();
 
             //// ✅ -------- DUMMY DATA SEEDING --------
 

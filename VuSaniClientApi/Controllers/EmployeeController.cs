@@ -75,6 +75,10 @@ namespace VuSaniClientApi.Controllers
                 return BadRequest(new { status = false, message = "Role is required for step 1 (Employment Information)." });
             }
 
+            var terminationValidation = ValidateEmploymentTerminationRules(request);
+            if (terminationValidation != null)
+                return BadRequest(new { status = false, message = terminationValidation });
+
             // Handle file upload for Profile
             if (request.Profile != null && request.Profile.Length > 0)
             {
@@ -111,6 +115,10 @@ namespace VuSaniClientApi.Controllers
                 return BadRequest(new { status = false, message = "Role is required for step 1 (Employment Information)." });
             }
 
+            var terminationValidation = ValidateEmploymentTerminationRules(request);
+            if (terminationValidation != null)
+                return BadRequest(new { status = false, message = terminationValidation });
+
             // Handle file upload for Profile
             if (request.Profile != null && request.Profile.Length > 0)
             {
@@ -123,7 +131,7 @@ namespace VuSaniClientApi.Controllers
         }
 
         /// <summary>
-        /// Delete an employee (soft delete)
+        /// Delete an employee (soft delete). Same structure as Node.js: 404 User Not Found, 400 Super Admin, 200 success.
         /// </summary>
         [Authorize]
         [HttpDelete("delete-employee/{id}")]
@@ -137,7 +145,16 @@ namespace VuSaniClientApi.Controllers
             }
 
             var result = await _employeeService.DeleteEmployeeAsync(id, userId.Value);
-            return Ok(result);
+
+            if (!result.Status)
+            {
+                if (result.Message == "User Not Found")
+                    return NotFound(new { status = false, message = result.Message });
+                if (result.Message == "You Can't Delete Super Admin")
+                    return BadRequest(new { status = false, message = result.Message });
+            }
+
+            return Ok(new { status = result.Status, message = result.Message });
         }
 
         private int? GetUserId()
@@ -146,6 +163,27 @@ namespace VuSaniClientApi.Controllers
                       ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             return int.TryParse(userId, out var id) ? id : null;
+        }
+
+        /// <summary>
+        /// Validates employment/termination business rules. Returns error message or null if valid.
+        /// </summary>
+        private static string? ValidateEmploymentTerminationRules(CreateUpdateEmployeeRequest request)
+        {
+            if (string.Equals(request.EmploymentStatus, "Inactive", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!request.DateOfTermination.HasValue)
+                    return "Date of Termination is required when Employment Status is Inactive.";
+            }
+
+            if (string.Equals(request.EmploymentStatus, "Active", StringComparison.OrdinalIgnoreCase)
+                && request.DateOfTermination.HasValue
+                && !request.ReasonForEmployeeBecomingInactive.HasValue)
+            {
+                return "Termination Reason is required when Date of Termination is provided.";
+            }
+
+            return null;
         }
 
         private async Task<string> SaveFileAsync(IFormFile file, string folder)

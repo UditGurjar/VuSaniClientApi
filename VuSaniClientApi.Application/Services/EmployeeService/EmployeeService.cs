@@ -62,7 +62,7 @@ namespace VuSaniClientApi.Application.Services.EmployeeService
             }
         }
 
-        public async Task<object> DeleteEmployeeAsync(int id, int userId)
+        public async Task<DeleteEmployeeResponse> DeleteEmployeeAsync(int id, int userId)
         {
             try
             {
