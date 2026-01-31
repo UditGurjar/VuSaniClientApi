@@ -52,7 +52,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                             from createdUser in createdGroup.DefaultIfEmpty()
                             join reasonForInactive in _context.ReasonForInactives on user.ReasonForEmployeeBecomingInactive equals reasonForInactive.Id into reasonGroup
                             from reasonForInactive in reasonGroup.DefaultIfEmpty()
-                            join roleHierarchy in _context.RoleHierarchies on user.HierarchyLevel equals roleHierarchy.Id into hierarchyGroup
+                            join roleHierarchy in _context.RoleHierarchies on role.Hierarchy equals roleHierarchy.Id into hierarchyGroup
                             from roleHierarchy in hierarchyGroup.DefaultIfEmpty()
                             where user.Deleted == false
                             select new { user, org, role, race, gender, empType, country, state, city, qual, dept, createdUser, reasonForInactive, roleHierarchy };
@@ -78,6 +78,19 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                 }
 
                 var rawData = await query.ToListAsync();
+
+                // Hierarchy is derived from Role (Role.Hierarchy -> RoleHierarchy) - display only
+                var hierarchyIds = rawData.Where(x => x.role != null && x.role.Hierarchy.HasValue).Select(x => x.role!.Hierarchy!.Value).Distinct().ToList();
+                var hierarchyNames = new Dictionary<int, string>();
+                if (hierarchyIds.Count > 0)
+                {
+                    var rhList = await _context.RoleHierarchies.AsNoTracking()
+                        .Where(rh => hierarchyIds.Contains(rh.Id))
+                        .Select(rh => new { rh.Id, Name = rh.Name ?? rh.Level })
+                        .ToListAsync();
+                    foreach (var rh in rhList)
+                        hierarchyNames[rh.Id] = rh.Name ?? string.Empty;
+                }
 
                 // Map to DTO
                 var employees = rawData.Select(x => new EmployeeListDto
@@ -109,6 +122,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     EmployeeTypeName = x.empType?.Name,
                     EmploymentStatus = x.user.EmploymentStatus,
                     DateOfEmployment = x.user.DateOfEmployment,
+                    DateOfTermination = x.user.DateOfTermination,
                     JoiningDate = x.user.JoiningDate,
                     EndDate = x.user.EndDate,
                     Country = x.user.CountryId,
@@ -131,8 +145,8 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     CreatedByName = x.createdUser != null ? $"{x.createdUser.Name} {x.createdUser.Surname}" : null,
                     CreatedAt = x.user.CreatedAt,
                     Manager = x.user.Manager,
-                    HierarchyLevel = x.user.HierarchyLevel,
-                    HierarchyLevelName = x.roleHierarchy?.Name,
+                    HierarchyLevel = x.role?.Hierarchy,
+                    HierarchyLevelName = x.roleHierarchy?.Name ?? (x.role?.Hierarchy.HasValue == true && hierarchyNames.TryGetValue(x.role.Hierarchy!.Value, out var hn) ? hn : null),
                     ReasonForEmployeeBecomingInactive = x.user.ReasonForEmployeeBecomingInactive,
                     ReasonForEmployeeBecomingInactiveName = x.reasonForInactive?.Name
                 }).ToList();
@@ -187,7 +201,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                                      from updatedUser in updatedGroup.DefaultIfEmpty()
                                      join reasonForInactive in _context.ReasonForInactives on user.ReasonForEmployeeBecomingInactive equals reasonForInactive.Id into reasonGroup
                                      from reasonForInactive in reasonGroup.DefaultIfEmpty()
-                                     join roleHierarchy in _context.RoleHierarchies on user.HierarchyLevel equals roleHierarchy.Id into hierarchyGroup
+                                     join roleHierarchy in _context.RoleHierarchies on role.Hierarchy equals roleHierarchy.Id into hierarchyGroup
                                      from roleHierarchy in hierarchyGroup.DefaultIfEmpty()
                                      where user.Id == id && user.Deleted == false
                                      select new { user, org, role, race, gender, empType, country, state, city, qual, dept, lang, manager, createdUser, updatedUser, reasonForInactive, roleHierarchy })
@@ -229,6 +243,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     EmployeeTypeName = rawData.empType?.Name,
                     EmploymentStatus = rawData.user.EmploymentStatus,
                     DateOfEmployment = rawData.user.DateOfEmployment,
+                    DateOfTermination = rawData.user.DateOfTermination,
                     JoiningDate = rawData.user.JoiningDate,
                     EndDate = rawData.user.EndDate,
                     StartProbationPeriod = rawData.user.StartProbationPeriod,
@@ -258,7 +273,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     IncomeTaxNumber = rawData.user.IncomeTaxNumber,
                     BankName = rawData.user.BankName,
                     AccountNumber = rawData.user.AccountNumber,
-                    HierarchyLevel = rawData.user.HierarchyLevel,
+                    HierarchyLevel = rawData.role?.Hierarchy,
                     HierarchyLevelName = rawData.roleHierarchy?.Name,
                     Manager = rawData.user.Manager,
                     ManagerName = rawData.manager != null ? $"{rawData.manager.Name} {rawData.manager.Surname}" : null,
@@ -275,6 +290,17 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     UpdatedByName = rawData.updatedUser != null ? $"{rawData.updatedUser.Name} {rawData.updatedUser.Surname}" : null,
                     UpdatedAt = rawData.user.UpdatedAt
                 };
+
+                // Hierarchy is from Role (display only) - resolve name if join missed
+                if (employee.HierarchyLevel.HasValue && string.IsNullOrEmpty(employee.HierarchyLevelName))
+                {
+                    var rh = await _context.RoleHierarchies.AsNoTracking()
+                        .Where(r => r.Id == employee.HierarchyLevel!.Value)
+                        .Select(r => r.Name ?? r.Level)
+                        .FirstOrDefaultAsync();
+                    if (rh != null)
+                        employee.HierarchyLevelName = rh;
+                }
 
                 // Load emergency contact details from NextOfKin table
                 var nextOfKins = await _context.NextOfKins

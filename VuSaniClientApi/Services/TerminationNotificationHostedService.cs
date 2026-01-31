@@ -63,11 +63,10 @@ namespace VuSaniClientApi.Services
 
                 var employees = await db.Users
                     .AsNoTracking()
-                    .Where(u => (u.Deleted != true)
-                        && u.DateOfTermination.HasValue
-                        && u.DateOfTermination.Value.Date == targetTerminationDate
-                        && u.CreatedBy.HasValue)
-                    .Select(u => new { u.Id, u.Name, u.Surname, u.DateOfTermination, u.CreatedBy })
+                 .Where(u => u.Deleted == false
+    && u.DateOfTermination.HasValue
+    && u.DateOfTermination.Value.Date == targetTerminationDate
+    && u.CreatedBy.HasValue).Select(u => new { u.Id, u.Name, u.Surname, u.DateOfTermination, u.CreatedBy })
                     .ToListAsync(ct);
 
                 foreach (var emp in employees)

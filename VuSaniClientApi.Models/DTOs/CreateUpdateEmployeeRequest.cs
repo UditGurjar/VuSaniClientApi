@@ -59,6 +59,8 @@ namespace VuSaniClientApi.Models.DTOs
         // Role & Position
         public int? Role { get; set; } // REQUIRED for Step 1
         public string? RoleDescription { get; set; }
+        /// <summary>Role Hierarchy ID (FK to RoleHierarchy). Form key = HierarchyLevel; we store only this ID; name is looked up from RoleHierarchy.</summary>
+        public int? HierarchyLevel { get; set; }
         
         // Department
         public int? Department { get; set; }

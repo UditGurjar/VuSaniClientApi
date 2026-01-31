@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace VuSaniClientApi.Models.DTOs
 {
@@ -39,6 +40,7 @@ namespace VuSaniClientApi.Models.DTOs
         public string? EmployeeTypeName { get; set; }
         public string? EmploymentStatus { get; set; }
         public DateTime? DateOfEmployment { get; set; }
+        public DateTime? DateOfTermination { get; set; }
         public DateTime? JoiningDate { get; set; }
         public DateTime? EndDate { get; set; }
         
@@ -95,7 +97,6 @@ namespace VuSaniClientApi.Models.DTOs
         public string? BankName { get; set; }
         public string? AccountNumber { get; set; }
         public int? HierarchyLevel { get; set; }
-        /// <summary>Display name from role_hierarchy (same as Node.js hierarchy_level_name).</summary>
         public string? HierarchyLevelName { get; set; }
         public string? Accountability { get; set; }
         public int? ReasonForEmployeeBecomingInactive { get; set; }
