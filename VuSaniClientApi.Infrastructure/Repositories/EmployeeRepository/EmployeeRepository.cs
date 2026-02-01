@@ -117,7 +117,9 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     DepartmentName = x.dept?.Name,
                     Role = x.user.RoleId,
                     RoleName = x.role?.Name,
-                    RoleDescription = DecodeHelper.DecodeSingle(x.user.Role.Description),
+                    RoleDescription = x.role != null
+    ? DecodeHelper.DecodeSingle(x.role.Description)
+    : null,
                     EmployeeType = x.user.EmployeeTypeId,
                     EmployeeTypeName = x.empType?.Name,
                     EmploymentStatus = x.user.EmploymentStatus,
