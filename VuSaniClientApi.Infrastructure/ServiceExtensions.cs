@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +17,7 @@ using VuSaniClientApi.Infrastructure.Repositories.PermissionsRepository;
 using VuSaniClientApi.Infrastructure.Repositories.RoleHierarchyRepository;
 using VuSaniClientApi.Infrastructure.Repositories.RoleRepository;
 using VuSaniClientApi.Infrastructure.Repositories.SkillRepository;
+using VuSaniClientApi.Infrastructure.Repositories.SoftwareAccessRequestRepository;
 
 namespace VuSaniClientApi.Infrastructure
 {
@@ -37,6 +38,7 @@ namespace VuSaniClientApi.Infrastructure
             services.AddScoped<ICommonPermissionRepository, CommonPermissionRepository>();
             services.AddScoped<IEmployeeRepository, EmployeeRepository>();
             services.AddScoped<IMasterDataRepository, MasterDataRepository>();
+            services.AddScoped<ISoftwareAccessRequestRepository, SoftwareAccessRequestRepository>();
 
             return services;
         }

@@ -22,7 +22,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
             _context = context;
         }
 
-        public async Task<object> GetEmployeesAsync(int page, int pageSize, bool all, string search, string filter)
+        public async Task<object> GetEmployeesAsync(int page, int pageSize, bool all, string search, string filter, bool authOnly = false)
         {
             try
             {
@@ -55,6 +55,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                             join roleHierarchy in _context.RoleHierarchies on role.Hierarchy equals roleHierarchy.Id into hierarchyGroup
                             from roleHierarchy in hierarchyGroup.DefaultIfEmpty()
                             where user.Deleted == false
+                                && (!authOnly || user.Password != null)
                             select new { user, org, role, race, gender, empType, country, state, city, qual, dept, createdUser, reasonForInactive, roleHierarchy };
 
                 // Search filter
@@ -67,6 +68,23 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                         (x.user.UniqueId != null && x.user.UniqueId.Contains(search)) ||
                         (x.user.Phone != null && x.user.Phone.Contains(search))
                     );
+                }
+
+                // Filter by organization and/or department (from JSON filter)
+                if (!string.IsNullOrWhiteSpace(filter))
+                {
+                    try
+                    {
+                        var filterObj = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(filter);
+                        if (filterObj != null)
+                        {
+                            if ((filterObj.TryGetValue("my_organization", out var orgVal) || filterObj.TryGetValue("myOrganization", out orgVal)) && TryGetIntFromElement(orgVal, out var orgId) && orgId > 0)
+                                query = query.Where(x => x.user.MyOrganization == orgId);
+                            if (filterObj.TryGetValue("department", out var deptVal) && TryGetIntFromElement(deptVal, out var deptId) && deptId > 0)
+                                query = query.Where(x => x.user.Department == deptId);
+                        }
+                    }
+                    catch { /* ignore parse errors */ }
                 }
 
                 var total = await query.CountAsync();
@@ -665,6 +683,31 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
             }
         }
 
+        public async Task<(bool Status, string Message)> UpdateCredentialAsync(int userId, string? password)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.Deleted == false);
+                if (user == null)
+                    return (false, "User not found");
+
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    user.Password = null;
+                    await _context.SaveChangesAsync();
+                    return (true, "Access removed successfully");
+                }
+
+                user.Password = PasswordHelper.HashPassword(password, "SHA1", null!);
+                await _context.SaveChangesAsync();
+                return (true, "Credential updated successfully");
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         private static int? CalculateAgeFromIdNumber(string idNumber)
         {
             // South African ID format: YYMMDD...
@@ -762,6 +805,19 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
             {
                 return new List<EmergencyContactInput>();
             }
+        }
+
+        private static bool TryGetIntFromElement(JsonElement element, out int value)
+        {
+            value = 0;
+            if (element.ValueKind == JsonValueKind.Number && element.TryGetInt32(out value))
+                return true;
+            if (element.ValueKind == JsonValueKind.String)
+            {
+                var s = element.GetString();
+                return int.TryParse(s, out value);
+            }
+            return false;
         }
 
         private class EmergencyContactInput

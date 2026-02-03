@@ -39,6 +39,7 @@ namespace VuSaniClientApi.Infrastructure.DBContext
         public DbSet<Race> Races { get; set; }
         public DbSet<ActivityLog> ActivityLogs { get; set; }
         public DbSet<TerminationNotificationLog> TerminationNotificationLogs { get; set; }
+        public DbSet<SoftwareAccessRequest> SoftwareAccessRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -95,6 +96,13 @@ namespace VuSaniClientApi.Infrastructure.DBContext
             modelBuilder.Entity<TerminationNotificationLog>()
                 .HasIndex(t => new { t.UserId, t.IntervalDays })
                 .IsUnique();
+
+            // Table name = class name (EF convention); schema = module name
+            modelBuilder.Entity<SoftwareAccessRequest>(e =>
+            {
+                e.ToTable(nameof(SoftwareAccessRequest), "Software");
+                e.Property(x => x.Status).HasMaxLength(50);
+            });
 
             //// ✅ -------- DUMMY DATA SEEDING --------
 

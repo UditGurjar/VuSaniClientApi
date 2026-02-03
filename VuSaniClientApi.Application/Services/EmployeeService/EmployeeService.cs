@@ -14,11 +14,11 @@ namespace VuSaniClientApi.Application.Services.EmployeeService
             _employeeRepository = employeeRepository;
         }
 
-        public async Task<object> GetEmployeesAsync(int page, int pageSize, bool all, string search, string filter)
+        public async Task<object> GetEmployeesAsync(int page, int pageSize, bool all, string search, string filter, bool authOnly = false)
         {
             try
             {
-                return await _employeeRepository.GetEmployeesAsync(page, pageSize, all, search, filter);
+                return await _employeeRepository.GetEmployeesAsync(page, pageSize, all, search, filter, authOnly);
             }
             catch (Exception)
             {
@@ -67,6 +67,18 @@ namespace VuSaniClientApi.Application.Services.EmployeeService
             try
             {
                 return await _employeeRepository.DeleteEmployeeAsync(id, userId);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<(bool Status, string Message)> UpdateCredentialAsync(int userId, string? password)
+        {
+            try
+            {
+                return await _employeeRepository.UpdateCredentialAsync(userId, password);
             }
             catch (Exception)
             {

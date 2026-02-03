@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VuSaniClientApi.Infrastructure.DBContext;
 
@@ -11,9 +12,11 @@ using VuSaniClientApi.Infrastructure.DBContext;
 namespace VuSaniClientApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260201161153_AddSoftwareAccessRequestTable")]
+    partial class AddSoftwareAccessRequestTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -54,7 +57,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasIndex("CreatedBy");
 
-                    b.ToTable("ActivityLogs", (string)null);
+                    b.ToTable("ActivityLogs");
                 });
 
             modelBuilder.Entity("VuSaniClientApi.Models.DBModels.Bank", b =>
@@ -81,7 +84,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Banks", (string)null);
+                    b.ToTable("Banks");
                 });
 
             modelBuilder.Entity("VuSaniClientApi.Models.DBModels.City", b =>
@@ -102,7 +105,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasIndex("StateId");
 
-                    b.ToTable("Cities", (string)null);
+                    b.ToTable("Cities");
                 });
 
             modelBuilder.Entity("VuSaniClientApi.Models.DBModels.Country", b =>
@@ -127,7 +130,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Countries", (string)null);
+                    b.ToTable("Countries");
                 });
 
             modelBuilder.Entity("VuSaniClientApi.Models.DBModels.Department", b =>
@@ -181,7 +184,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasIndex("ParentDepartment");
 
-                    b.ToTable("Department", (string)null);
+                    b.ToTable("Department");
 
                     b.HasData(
                         new
@@ -288,7 +291,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasIndex("Parent");
 
-                    b.ToTable("Disabilities", (string)null);
+                    b.ToTable("Disabilities");
 
                     b.HasData(
                         new
@@ -359,7 +362,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EmployeeTypes", (string)null);
+                    b.ToTable("EmployeeTypes");
 
                     b.HasData(
                         new
@@ -532,7 +535,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Genders", (string)null);
+                    b.ToTable("Genders");
 
                     b.HasData(
                         new
@@ -596,7 +599,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("HighestQualifications", (string)null);
+                    b.ToTable("HighestQualifications");
 
                     b.HasData(
                         new
@@ -758,7 +761,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Languages", (string)null);
+                    b.ToTable("Languages");
 
                     b.HasData(
                         new
@@ -870,7 +873,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Licences", (string)null);
+                    b.ToTable("Licences");
 
                     b.HasData(
                         new
@@ -942,7 +945,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("NextOfKins", (string)null);
+                    b.ToTable("NextOfKins");
 
                     b.HasData(
                         new
@@ -1023,7 +1026,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasIndex("ParentId");
 
-                    b.ToTable("Organizations", (string)null);
+                    b.ToTable("Organizations");
 
                     b.HasData(
                         new
@@ -1101,7 +1104,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasIndex("LicenceId");
 
-                    b.ToTable("OrganizationLicences", (string)null);
+                    b.ToTable("OrganizationLicences");
 
                     b.HasData(
                         new
@@ -1148,7 +1151,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasIndex("RoleHierarchyId");
 
-                    b.ToTable("OrganizationRoleHierarchies", (string)null);
+                    b.ToTable("OrganizationRoleHierarchies");
 
                     b.HasData(
                         new
@@ -1198,7 +1201,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Races", (string)null);
+                    b.ToTable("Races");
 
                     b.HasData(
                         new
@@ -1250,7 +1253,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ReasonForInactives", (string)null);
+                    b.ToTable("ReasonForInactives");
 
                     b.HasData(
                         new
@@ -1312,7 +1315,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("RelationShips", (string)null);
+                    b.ToTable("RelationShips");
 
                     b.HasData(
                         new
@@ -1697,7 +1700,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("Roles");
 
                     b.HasData(
                         new
@@ -1802,7 +1805,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("RoleHierarchies", (string)null);
+                    b.ToTable("RoleHierarchies");
 
                     b.HasData(
                         new
@@ -1934,7 +1937,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Sidebars", (string)null);
+                    b.ToTable("Sidebars");
                 });
 
             modelBuilder.Entity("VuSaniClientApi.Models.DBModels.Skill", b =>
@@ -1986,7 +1989,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Skills", (string)null);
+                    b.ToTable("Skills");
 
                     b.HasData(
                         new
@@ -2232,7 +2235,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasIndex("CountryId");
 
-                    b.ToTable("States", (string)null);
+                    b.ToTable("States");
                 });
 
             modelBuilder.Entity("VuSaniClientApi.Models.DBModels.TerminationNotificationLog", b =>
@@ -2257,7 +2260,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
                     b.HasIndex("UserId", "IntervalDays")
                         .IsUnique();
 
-                    b.ToTable("TerminationNotificationLogs", (string)null);
+                    b.ToTable("TerminationNotificationLogs");
                 });
 
             modelBuilder.Entity("VuSaniClientApi.Models.DBModels.User", b =>
@@ -2584,7 +2587,7 @@ namespace VuSaniClientApi.Infrastructure.Migrations
 
                     b.HasIndex("StateId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
 
                     b.HasData(
                         new

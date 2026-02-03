@@ -131,6 +131,38 @@ namespace VuSaniClientApi.Controllers
         }
 
         /// <summary>
+        /// Update or remove employee credentials (give/revoke software access). Empty password = remove access.
+        /// </summary>
+        [Authorize]
+        [HttpPost("update-credential")]
+        public async Task<IActionResult> UpdateCredential([FromBody] UpdateEmployeeCredentialDto dto)
+        {
+            if (dto == null || dto.Id <= 0)
+                return BadRequest(new { status = false, message = "Invalid input" });
+
+            var result = await _employeeService.UpdateCredentialAsync(dto.Id, string.IsNullOrWhiteSpace(dto.Password) ? null : dto.Password);
+            if (!result.Status)
+                return NotFound(new { status = false, message = result.Message });
+            return Ok(new { status = true, message = result.Message });
+        }
+
+        /// <summary>
+        /// Get employees that have credentials (software access) - same shape as get-employee, filtered by Password not null.
+        /// </summary>
+        [Authorize]
+        [HttpGet("auth-only")]
+        public async Task<IActionResult> GetAuthOnlyEmployees(
+            int page = 1,
+            int pageSize = 10,
+            bool all = false,
+            string search = "",
+            string filter = "")
+        {
+            var result = await _employeeService.GetEmployeesAsync(page, pageSize, all, search, filter, authOnly: true);
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Delete an employee (soft delete). Same structure as Node.js: 404 User Not Found, 400 Super Admin, 200 success.
         /// </summary>
         [Authorize]

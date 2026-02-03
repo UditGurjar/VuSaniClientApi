@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +15,8 @@ using VuSaniClientApi.Application.Services.PermissionService;
 using VuSaniClientApi.Application.Services.RoleHierarchyService;
 using VuSaniClientApi.Application.Services.RoleService;
 using VuSaniClientApi.Application.Services.SkillService;
+using VuSaniClientApi.Application.Services.SoftwareAccessService;
+using VuSaniClientApi.Application.Services.SoftwareAccessRequestService;
 
 namespace VuSaniClientApi.Application
 {
@@ -33,6 +35,8 @@ namespace VuSaniClientApi.Application
             services.AddScoped<IHighestQualificationService, HighestQualificationService>();
             services.AddScoped<IEmployeeService, EmployeeService>();
             services.AddScoped<IMasterDataService, MasterDataService>();
+            services.AddScoped<ISoftwareAccessService, SoftwareAccessService>();
+            services.AddScoped<ISoftwareAccessRequestService, SoftwareAccessRequestService>();
             return services;
         }
     }

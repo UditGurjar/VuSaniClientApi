@@ -1,4 +1,4 @@
-﻿using Azure.Core;
+using Azure.Core;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -55,6 +55,81 @@ namespace VuSaniClientApi.Infrastructure.Repositories.PermissionsRepository
 
 
             return await GetModulesAsync(permissions ?? new(), 0);
+        }
+
+        public async Task<List<SidebarModuleDto>> GetSidebarForPermissionAsync(int? userId, int? roleId, int? organizationId)
+        {
+            string? permissionJson = null;
+            if (roleId.HasValue)
+            {
+                permissionJson = await _context.Roles
+                    .Where(x => x.Id == roleId.Value)
+                    .Select(x => x.Permission)
+                    .FirstOrDefaultAsync();
+            }
+            else if (userId.HasValue)
+            {
+                var user = await _context.Users
+                    .Where(x => x.Id == userId.Value)
+                    .Select(x => new { x.Permission, x.MyOrganization })
+                    .FirstOrDefaultAsync();
+                if (user == null) return new List<SidebarModuleDto>();
+                permissionJson = user.Permission;
+            }
+
+            var permissions = string.IsNullOrEmpty(permissionJson)
+                ? new List<SidebarPermissionDto>()
+                : JsonSerializer.Deserialize<List<SidebarPermissionDto>>(permissionJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<SidebarPermissionDto>();
+
+            return await GetModulesForPermissionAsync(permissions, 0, organizationId);
+        }
+
+        private async Task<List<SidebarModuleDto>> GetModulesForPermissionAsync(
+            List<SidebarPermissionDto> permissions, int parentId, int? organizationId)
+        {
+            var modules = await _context.Sidebars
+                .Where(x => x.ParentId == parentId && x.Deleted == false)
+                .OrderBy(x => x.Sequence)
+                .Select(x => new SidebarModuleDto
+                {
+                    Id = x.Id,
+                    Title = x.Title,
+                    Icon = x.Icon,
+                    Path = x.Path,
+                    Type = x.Type.ToString()
+                })
+                .ToListAsync();
+
+            foreach (var module in modules)
+            {
+                if (!string.IsNullOrWhiteSpace(module.Icon))
+                {
+                    var request = _httpContextAccessor.HttpContext?.Request;
+                    if (request != null)
+                    {
+                        var baseUrl = $"{request.Scheme}://{request.Host}";
+                        module.Icon = $"{baseUrl}/{module.Icon.TrimStart('/')}";
+                    }
+                }
+
+                var modulePermission = permissions.FirstOrDefault(p => p.SidebarId == module.Id);
+                if (modulePermission != null && organizationId.HasValue && modulePermission.Permissions.TryGetValue(organizationId.Value.ToString(), out var actions))
+                    module.Permissions = new Dictionary<string, PermissionActions> { { organizationId.Value.ToString(), actions } };
+                else if (modulePermission != null)
+                    module.Permissions = modulePermission.Permissions;
+                else if (organizationId.HasValue)
+                    module.Permissions = new Dictionary<string, PermissionActions>
+                    {
+                        { organizationId.Value.ToString(), new PermissionActions { View = false, Edit = false, Delete = false, Create = false } }
+                    };
+                else
+                    module.Permissions = new Dictionary<string, PermissionActions>();
+
+                module.Submodules = await GetModulesForPermissionAsync(permissions, module.Id, organizationId);
+            }
+
+            return modules;
         }
 
         private async Task<List<SidebarModuleDto>> GetModulesAsync(
