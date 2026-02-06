@@ -21,8 +21,7 @@ namespace VuSaniClientApi.Controllers
         [HttpPost("update-software-access")]
         public async Task<IActionResult> UpdateSoftwareAccess([FromBody] UpdateSoftwareAccessDto dto)
         {
-            Log.Information("UpdateSoftwareAccess called: Id={Id}, Type={Type}, OrgId={OrgId}, PermissionCount={Count}",
-                dto?.Id, dto?.Type, dto?.OrganizationId, dto?.Permission?.Count ?? 0);
+            try { 
             
             if (dto == null)
                 return BadRequest(new { status = false, message = "Invalid input" });
@@ -34,13 +33,26 @@ namespace VuSaniClientApi.Controllers
             
             await _service.UpdateSoftwareAccessAsync(dto);
             return Ok(new { status = true, message = "Record updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("get-permission")]
         public async Task<IActionResult> GetPermission([FromQuery] int? id, [FromQuery] int? roleId, [FromQuery] int? organizationId)
         {
+            try { 
             var data = await _service.GetPermissionAsync(id, roleId, organizationId);
             return Ok(new { status = true, data });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

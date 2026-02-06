@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 using VuSaniClientApi.Application.Services.DepartmentService;
 using VuSaniClientApi.Filters;
 
@@ -26,8 +27,16 @@ namespace VuSaniClientApi.Controllers
             string? search = null,
             string? filter = null)
         {
-            var result = await _departmentService.GetDepartmentsAsync(page, pageSize, all, search, filter);
-            return Ok(result);
+            try
+            {
+                var result = await _departmentService.GetDepartmentsAsync(page, pageSize, all, search, filter);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 using VuSaniClientApi.Application.Services.MasterDataService;
 
 using VuSaniClientApi.Filters;
@@ -131,8 +132,16 @@ namespace VuSaniClientApi.Controllers
             string search = "",
             string filter = "")
         {
+            try
+            {
             var result = await _masterDataService.GetReasonForInactiveAsync(page, pageSize, all, search, filter);
             return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         /// <summary>
@@ -142,8 +151,15 @@ namespace VuSaniClientApi.Controllers
         [HttpGet("get-reason-for-inactive/{id}")]
         public async Task<IActionResult> GetReasonForInactiveById(int id)
         {
+            try { 
             var result = await _masterDataService.GetReasonForInactiveByIdAsync(id);
             return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         /// <summary>
@@ -158,8 +174,15 @@ namespace VuSaniClientApi.Controllers
             string search = "",
             string filter = "")
         {
+            try { 
             var result = await _masterDataService.GetDisabilityAsync(page, pageSize, all, search, filter);
             return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         /// <summary>
@@ -168,8 +191,15 @@ namespace VuSaniClientApi.Controllers
         [HttpGet("get-disability/{id}")]
         public async Task<IActionResult> GetDisabilityById(int id)
         {
+            try { 
             var result = await _masterDataService.GetDisabilityByIdAsync(id);
             return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         /// <summary>
@@ -178,8 +208,15 @@ namespace VuSaniClientApi.Controllers
         [HttpGet("get-disability-dropdown")]
         public async Task<IActionResult> GetDisabilityDropdown()
         {
+            try { 
             var result = await _masterDataService.GetDisabilityDropdownAsync();
             return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
     }

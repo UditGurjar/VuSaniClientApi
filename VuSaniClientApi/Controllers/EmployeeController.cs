@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 using System.Security.Claims;
 using VuSaniClientApi.Application.Services.EmployeeService;
 using VuSaniClientApi.Filters;
@@ -33,8 +34,17 @@ namespace VuSaniClientApi.Controllers
             string search = "",
             string filter = "")
         {
-            var result = await _employeeService.GetEmployeesAsync(page, pageSize, all, search, filter);
-            return Ok(result);
+            try
+            {
+                var result = await _employeeService.GetEmployeesAsync(page, pageSize, all, search, filter);
+                return Ok(result);
+
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         /// <summary>
@@ -45,8 +55,16 @@ namespace VuSaniClientApi.Controllers
         [SideBarPermissionAttributeTest("view", 16, "users", "my_organization")]
         public async Task<IActionResult> GetEmployeeById(int id)
         {
-            var result = await _employeeService.GetEmployeeByIdAsync(id);
-            return Ok(result);
+            try
+            {
+                var result = await _employeeService.GetEmployeeByIdAsync(id);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         /// <summary>
@@ -58,36 +76,44 @@ namespace VuSaniClientApi.Controllers
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> CreateEmployee([FromForm] CreateUpdateEmployeeRequest request)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
-            }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-            var userId = GetUserId();
-            if (!userId.HasValue)
+                var userId = GetUserId();
+                if (!userId.HasValue)
+                {
+                    return Unauthorized(new { status = false, message = "Unauthorized: Invalid session" });
+                }
+
+                // Validate role requirement for step 1 (Employment Information) - steps are 0-indexed
+                if (request.ActiveStep == 1 && !request.Role.HasValue)
+                {
+                    return BadRequest(new { status = false, message = "Role is required for step 1 (Employment Information)." });
+                }
+
+                var terminationValidation = ValidateEmploymentTerminationRules(request);
+                if (terminationValidation != null)
+                    return BadRequest(new { status = false, message = terminationValidation });
+
+                // Handle file upload for Profile
+                if (request.Profile != null && request.Profile.Length > 0)
+                {
+                    request.ProfilePath = await SaveFileAsync(request.Profile, "users");
+                    request.Profile = null; // Clear IFormFile after saving
+                }
+
+                var result = await _employeeService.CreateEmployeeAsync(request, userId.Value);
+                return Ok(result);
+            }
+            catch (Exception ex)
             {
-                return Unauthorized(new { status = false, message = "Unauthorized: Invalid session" });
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
             }
-
-            // Validate role requirement for step 1 (Employment Information) - steps are 0-indexed
-            if (request.ActiveStep == 1 && !request.Role.HasValue)
-            {
-                return BadRequest(new { status = false, message = "Role is required for step 1 (Employment Information)." });
-            }
-
-            var terminationValidation = ValidateEmploymentTerminationRules(request);
-            if (terminationValidation != null)
-                return BadRequest(new { status = false, message = terminationValidation });
-
-            // Handle file upload for Profile
-            if (request.Profile != null && request.Profile.Length > 0)
-            {
-                request.ProfilePath = await SaveFileAsync(request.Profile, "users");
-                request.Profile = null; // Clear IFormFile after saving
-            }
-
-            var result = await _employeeService.CreateEmployeeAsync(request, userId.Value);
-            return Ok(result);
         }
 
         /// <summary>
@@ -98,36 +124,44 @@ namespace VuSaniClientApi.Controllers
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> UpdateEmployee([FromForm] CreateUpdateEmployeeRequest request)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                return BadRequest(ModelState);
-            }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
 
-            var userId = GetUserId();
-            if (!userId.HasValue)
+                var userId = GetUserId();
+                if (!userId.HasValue)
+                {
+                    return Unauthorized(new { status = false, message = "Unauthorized: Invalid session" });
+                }
+
+                // Validate role requirement for step 1 (Employment Information) - steps are 0-indexed
+                if (request.ActiveStep == 1 && !request.Role.HasValue)
+                {
+                    return BadRequest(new { status = false, message = "Role is required for step 1 (Employment Information)." });
+                }
+
+                var terminationValidation = ValidateEmploymentTerminationRules(request);
+                if (terminationValidation != null)
+                    return BadRequest(new { status = false, message = terminationValidation });
+
+                // Handle file upload for Profile
+                if (request.Profile != null && request.Profile.Length > 0)
+                {
+                    request.ProfilePath = await SaveFileAsync(request.Profile, "users");
+                    request.Profile = null; // Clear IFormFile after saving
+                }
+
+                var result = await _employeeService.UpdateEmployeeAsync(request, userId.Value);
+                return Ok(result);
+            }
+            catch (Exception ex)
             {
-                return Unauthorized(new { status = false, message = "Unauthorized: Invalid session" });
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
             }
-
-            // Validate role requirement for step 1 (Employment Information) - steps are 0-indexed
-            if (request.ActiveStep == 1 && !request.Role.HasValue)
-            {
-                return BadRequest(new { status = false, message = "Role is required for step 1 (Employment Information)." });
-            }
-
-            var terminationValidation = ValidateEmploymentTerminationRules(request);
-            if (terminationValidation != null)
-                return BadRequest(new { status = false, message = terminationValidation });
-
-            // Handle file upload for Profile
-            if (request.Profile != null && request.Profile.Length > 0)
-            {
-                request.ProfilePath = await SaveFileAsync(request.Profile, "users");
-                request.Profile = null; // Clear IFormFile after saving
-            }
-
-            var result = await _employeeService.UpdateEmployeeAsync(request, userId.Value);
-            return Ok(result);
         }
 
         /// <summary>
@@ -137,13 +171,21 @@ namespace VuSaniClientApi.Controllers
         [HttpPost("update-credential")]
         public async Task<IActionResult> UpdateCredential([FromBody] UpdateEmployeeCredentialDto dto)
         {
-            if (dto == null || dto.Id <= 0)
-                return BadRequest(new { status = false, message = "Invalid input" });
+            try
+            {
+                if (dto == null || dto.Id <= 0)
+                    return BadRequest(new { status = false, message = "Invalid input" });
 
-            var result = await _employeeService.UpdateCredentialAsync(dto.Id, string.IsNullOrWhiteSpace(dto.Password) ? null : dto.Password);
-            if (!result.Status)
-                return NotFound(new { status = false, message = result.Message });
-            return Ok(new { status = true, message = result.Message });
+                var result = await _employeeService.UpdateCredentialAsync(dto.Id, string.IsNullOrWhiteSpace(dto.Password) ? null : dto.Password);
+                if (!result.Status)
+                    return NotFound(new { status = false, message = result.Message });
+                return Ok(new { status = true, message = result.Message });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         /// <summary>
@@ -158,8 +200,16 @@ namespace VuSaniClientApi.Controllers
             string search = "",
             string filter = "")
         {
-            var result = await _employeeService.GetEmployeesAsync(page, pageSize, all, search, filter, authOnly: true);
-            return Ok(result);
+            try
+            {
+                var result = await _employeeService.GetEmployeesAsync(page, pageSize, all, search, filter, authOnly: true);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         /// <summary>
@@ -170,23 +220,32 @@ namespace VuSaniClientApi.Controllers
         [SideBarPermissionAttributeTest("delete", 16, "users", "my_organization")]
         public async Task<IActionResult> DeleteEmployee(int id)
         {
-            var userId = GetUserId();
-            if (!userId.HasValue)
+            try
             {
-                return Unauthorized(new { status = false, message = "Unauthorized: Invalid session" });
+                var userId = GetUserId();
+                if (!userId.HasValue)
+                {
+                    return Unauthorized(new { status = false, message = "Unauthorized: Invalid session" });
+                }
+
+                var result = await _employeeService.DeleteEmployeeAsync(id, userId.Value);
+
+                if (!result.Status)
+                {
+                    if (result.Message == "User Not Found")
+                        return NotFound(new { status = false, message = result.Message });
+                    if (result.Message == "You Can't Delete Super Admin")
+                        return BadRequest(new { status = false, message = result.Message });
+                }
+
+                return Ok(new { status = result.Status, message = result.Message });
+
             }
-
-            var result = await _employeeService.DeleteEmployeeAsync(id, userId.Value);
-
-            if (!result.Status)
+            catch (Exception ex)
             {
-                if (result.Message == "User Not Found")
-                    return NotFound(new { status = false, message = result.Message });
-                if (result.Message == "You Can't Delete Super Admin")
-                    return BadRequest(new { status = false, message = result.Message });
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
             }
-
-            return Ok(new { status = result.Status, message = result.Message });
         }
 
         private int? GetUserId()
@@ -202,20 +261,27 @@ namespace VuSaniClientApi.Controllers
         /// </summary>
         private static string? ValidateEmploymentTerminationRules(CreateUpdateEmployeeRequest request)
         {
-            if (string.Equals(request.EmploymentStatus, "Inactive", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                if (!request.DateOfTermination.HasValue)
-                    return "Date of Termination is required when Employment Status is Inactive.";
-            }
+                if (string.Equals(request.EmploymentStatus, "Inactive", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!request.DateOfTermination.HasValue)
+                        return "Date of Termination is required when Employment Status is Inactive.";
+                }
 
-            if (string.Equals(request.EmploymentStatus, "Active", StringComparison.OrdinalIgnoreCase)
-                && request.DateOfTermination.HasValue
-                && !request.ReasonForEmployeeBecomingInactive.HasValue)
+                if (string.Equals(request.EmploymentStatus, "Active", StringComparison.OrdinalIgnoreCase)
+                    && request.DateOfTermination.HasValue
+                    && !request.ReasonForEmployeeBecomingInactive.HasValue)
+                {
+                    return "Termination Reason is required when Date of Termination is provided.";
+                }
+
+                return null;
+            }
+            catch (Exception)
             {
-                return "Termination Reason is required when Date of Termination is provided.";
+                throw;
             }
-
-            return null;
         }
 
         private async Task<string> SaveFileAsync(IFormFile file, string folder)

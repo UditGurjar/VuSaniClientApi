@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 using System.Security.Claims;
 using VuSaniClientApi.Application.Services.SoftwareAccessRequestService;
 using VuSaniClientApi.Application.Services.SoftwareAccessService;
@@ -39,65 +40,113 @@ namespace VuSaniClientApi.Controllers
             [FromQuery] string? search = null,
             [FromQuery] string? filter = null)
         {
-            var userId = GetUserId();
-            if (!userId.HasValue)
-                return Unauthorized(new { status = false, message = "Unauthorized" });
-            var (data, total) = await _service.GetAsync(id, page, pageSize, all, search, filter, userId.Value);
-            return Ok(new { status = true, data, totalRecord = total });
+            try
+            {
+                var userId = GetUserId();
+                if (!userId.HasValue)
+                    return Unauthorized(new { status = false, message = "Unauthorized" });
+                var (data, total) = await _service.GetAsync(id, page, pageSize, all, search, filter, userId.Value);
+                return Ok(new { status = true, data, totalRecord = total });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("get-software-access-request/{id}")]
         public async Task<IActionResult> GetSoftwareAccessRequestById([FromRoute] int id, [FromQuery] bool grouped = false)
         {
-            var userId = GetUserId();
-            if (!userId.HasValue)
-                return Unauthorized(new { status = false, message = "Unauthorized" });
-            var (data, total) = await _service.GetAsync(id, 1, 1, false, null, null, userId.Value);
-            if (data is System.Collections.IList list && list.Count == 0)
-                return NotFound(new { status = false, message = "Not found" });
-            return Ok(new { status = true, data = new[] { data }, totalRecord = total });
+            try
+            {
+                var userId = GetUserId();
+                if (!userId.HasValue)
+                    return Unauthorized(new { status = false, message = "Unauthorized" });
+                var (data, total) = await _service.GetAsync(id, 1, 1, false, null, null, userId.Value);
+                if (data is System.Collections.IList list && list.Count == 0)
+                    return NotFound(new { status = false, message = "Not found" });
+                return Ok(new { status = true, data = new[] { data }, totalRecord = total });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         /// <summary>Create or update a software access request.</summary>
         [HttpPost("create-update-software-access-request")]
         public async Task<IActionResult> CreateUpdateSoftwareAccessRequest([FromBody] CreateUpdateSoftwareAccessRequestDto dto)
         {
-            var userId = GetUserId();
-            if (!userId.HasValue)
-                return Unauthorized(new { status = false, message = "Unauthorized" });
-            await _service.CreateUpdateAsync(dto, userId.Value);
-            var status = dto.Id.HasValue ? "Updated" : "Created";
-            return Ok(new { status = true, message = $"Record {status} Successfully" });
+            try
+            {
+                var userId = GetUserId();
+                if (!userId.HasValue)
+                    return Unauthorized(new { status = false, message = "Unauthorized" });
+                await _service.CreateUpdateAsync(dto, userId.Value);
+                var status = dto.Id.HasValue ? "Updated" : "Created";
+                return Ok(new { status = true, message = $"Record {status} Successfully" });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         /// <summary>Delete a software access request (soft delete).</summary>
         [HttpDelete("delete-software-access-request/{id}")]
         public async Task<IActionResult> DeleteSoftwareAccessRequest(int id)
         {
-            var ok = await _service.DeleteAsync(id);
-            if (!ok)
-                return NotFound(new { status = false, message = "Not found" });
-            return Ok(new { status = true, message = "Record deleted successfully" });
+            try
+            {
+                var ok = await _service.DeleteAsync(id);
+                if (!ok)
+                    return NotFound(new { status = false, message = "Not found" });
+                return Ok(new { status = true, message = "Record deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         /// <summary>Approve or reject a software access request.</summary>
         [HttpPost("update-request-status")]
         public async Task<IActionResult> UpdateRequestStatus([FromBody] UpdateAccessRequestStatusDto dto)
         {
-            var userId = GetUserId();
-            if (!userId.HasValue)
-                return Unauthorized(new { status = false, message = "Unauthorized" });
-            await _service.UpdateStatusAsync(dto, userId.Value);
-            return Ok(new { status = true, message = "Record approved Successfully" });
+            try
+            {
+                var userId = GetUserId();
+                if (!userId.HasValue)
+                    return Unauthorized(new { status = false, message = "Unauthorized" });
+                await _service.UpdateStatusAsync(dto, userId.Value);
+                return Ok(new { status = true, message = "Record approved Successfully" });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("get-permission")]
         public async Task<IActionResult> GetPermission([FromQuery] int? id, [FromQuery] int? roleId, [FromQuery] int? organizationId)
         {
-            var userId = GetUserId();
-            var targetId = id ?? userId;
-            var data = await _permissionService.GetPermissionAsync(targetId, roleId, organizationId);
-            return Ok(new { status = true, data });
+            try
+            {
+                var userId = GetUserId();
+                var targetId = id ?? userId;
+                var data = await _permissionService.GetPermissionAsync(targetId, roleId, organizationId);
+                return Ok(new { status = true, data });
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

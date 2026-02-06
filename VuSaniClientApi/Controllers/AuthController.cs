@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using VuSaniClientApi.Application.Services.LoginService;
+using VuSaniClientApi.Models.DTOs;
 using VuSaniClientApi.Models.QueryModels;
 
 namespace VuSaniClientApi.Controllers
@@ -26,28 +27,37 @@ namespace VuSaniClientApi.Controllers
                 var user = await _loginService.AuthenticateUser(dto);
 
                 if (user.Status == false)
-                    return NotFound(user.Message);
+                {
+                    Log.Warning("Login failed for {Field}: {Message}", dto.Field, user.Message);
+                    return Unauthorized(new ApiResponse<object>
+                    {
+                        Status = false,
+                        Message = user.Message,
+                        Data = null,
+                        Token = null
+                    });
+                }
 
                 return Ok(new ApiResponse<object>
                 {
                     Status = true,
                     Message = "Successfully",
                     Data = user,
-                    Token=user.Token
+                    Token = user.Token
                 });
             }
             catch (Exception ex)
             {
-                Log.Error(ex, ex.Message);
-                return BadRequest(ex.Message);
+                Log.Error(ex, "Login error for {Field}: {Message}", dto.Field, ex.Message);
+                return BadRequest(new ApiResponse<object>
+                {
+                    Status = false,
+                    Message = "An error occurred during login",
+                    Data = null,
+                    Token = null
+                });
             }
         }
-        public class ApiResponse<T>
-        {
-            public bool Status { get; set; }
-            public string Message { get; set; }
-            public string Token { get; set; }
-            public T Data { get; set; }
-        }
+        
     }
 }

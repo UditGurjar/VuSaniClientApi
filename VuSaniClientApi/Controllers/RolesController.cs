@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
 using System.Security.Claims;
 using VuSaniClientApi.Application.Services.RoleService;
 using VuSaniClientApi.Filters;
@@ -28,8 +29,15 @@ namespace VuSaniClientApi.Controllers
         string search = "",
         string filter = "")
         {
+            try { 
             var result = await _roleService.GetRolesAsync(page, pageSize, all, search, filter);
             return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         [Authorize]
@@ -37,8 +45,15 @@ namespace VuSaniClientApi.Controllers
         [SideBarPermissionAttributeTest("view", 7, "roles")]
         public async Task<IActionResult> GetRoleById(int id)
         {
+            try { 
             var result = await _roleService.GetRoleByIdAsync(id);
             return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         [Authorize]
@@ -48,6 +63,7 @@ namespace VuSaniClientApi.Controllers
 
         public async Task<IActionResult> CreateUpdateRole([FromBody] CreateUpdateRoleRequest request)
         {
+            try { 
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -61,6 +77,12 @@ namespace VuSaniClientApi.Controllers
 
             var result = await _roleService.CreateUpdateRoleAsync(request, userId.Value);
             return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         [Authorize]
@@ -68,6 +90,7 @@ namespace VuSaniClientApi.Controllers
         [SideBarPermissionAttributeTest("delete", 7, "roles", "organization")]
         public async Task<IActionResult> DeleteRole(int id)
         {
+            try { 
             var userId = GetUserId();
             if (!userId.HasValue)
             {
@@ -76,6 +99,12 @@ namespace VuSaniClientApi.Controllers
 
             var result = await _roleService.DeleteRoleAsync(id, userId.Value);
             return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, ex.Message);
+                return BadRequest(ex.Message);
+            }
         }
 
         private int? GetUserId()

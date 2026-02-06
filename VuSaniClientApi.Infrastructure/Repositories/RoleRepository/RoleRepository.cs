@@ -23,146 +23,156 @@ namespace VuSaniClientApi.Infrastructure.Repositories.RoleRepository
         }
         public async Task<object> GetRolesAsync(int page, int pageSize, bool all, string? search, string? filter)
         {
-            var query =
-       from role in _context.Roles
-
-       join user in _context.Users
-           on role.CreatedBy equals user.Id into users
-       from user in users.DefaultIfEmpty()
-
-       join org in _context.Organizations
-           on role.OrganizationId equals org.Id into orgs
-       from org in orgs.DefaultIfEmpty()
-
-       join hierarchy in _context.RoleHierarchies
-           on role.Hierarchy equals hierarchy.Id into hierarchies
-       from hierarchy in hierarchies.DefaultIfEmpty()
-
-       join qualification in _context.HighestQualifications
-           on role.QualificationId equals qualification.Id into qualifications
-       from qualification in qualifications.DefaultIfEmpty()
-
-           // ✅ SELF JOIN for ReportToRole (Role -> Role)
-       join reportRole in _context.Roles
-           on role.ReportToRole equals reportRole.Id.ToString() into reportRoles
-       from reportRole in reportRoles.DefaultIfEmpty()
-
-       where role.Deleted == false
-       select new
-       {
-           role,
-           user,
-           org,
-           hierarchy,
-           qualification,
-           reportRole   // ✅ now exists
-       };
-
-
-            // 🔍 Search
-            if (!string.IsNullOrWhiteSpace(search))
+            try
             {
-                query = query.Where(x =>
-                    (x.role.Name != null && x.role.Name.Contains(search)) ||
-                    (x.role.Description != null && x.role.Description.Contains(search)) ||
-                    (x.org != null && x.org.Name != null && x.org.Name.Contains(search)) ||
-                    (x.user != null && x.user.Name != null && x.user.Name.Contains(search))
-                );
-            }
+                var query =
+     from role in _context.Roles
 
-            var total = await query.CountAsync();
+     join user in _context.Users
+         on role.CreatedBy equals user.Id into users
+     from user in users.DefaultIfEmpty()
 
-            if (!all)
-                query = query.Skip((page - 1) * pageSize).Take(pageSize);
+     join org in _context.Organizations
+         on role.OrganizationId equals org.Id into orgs
+     from org in orgs.DefaultIfEmpty()
 
-            var rawData = await query.ToListAsync();
+     join hierarchy in _context.RoleHierarchies
+         on role.Hierarchy equals hierarchy.Id into hierarchies
+     from hierarchy in hierarchies.DefaultIfEmpty()
 
-            // 🧠 Collect all ids
-            var allSkillIds = new HashSet<int>();
-            var allLicenseIds = new HashSet<int>();
+     join qualification in _context.HighestQualifications
+         on role.QualificationId equals qualification.Id into qualifications
+     from qualification in qualifications.DefaultIfEmpty()
 
-            foreach (var r in rawData)
-            {
-                allSkillIds.UnionWith(SafeParseIds(r.role.Skills));
-                allLicenseIds.UnionWith(SafeParseIds(r.role.License));
-            }
+         // ✅ SELF JOIN for ReportToRole (Role -> Role)
+     join reportRole in _context.Roles
+         on role.ReportToRole equals reportRole.Id.ToString() into reportRoles
+     from reportRole in reportRoles.DefaultIfEmpty()
 
-            var skills = await _context.Skills
-                .Where(x => allSkillIds.Contains(x.Id))
-                .ToDictionaryAsync(x => x.Id, x => x.Name);
+     where role.Deleted == false
+     select new
+     {
+         role,
+         user,
+         org,
+         hierarchy,
+         qualification,
+         reportRole   // ✅ now exists
+     };
 
-            var licenses = await _context.Licences
-                .Where(x => allLicenseIds.Contains(x.Id))
-                .ToDictionaryAsync(x => x.Id, x => x.Name);
 
- 
-            // 🎯 Final shaping
-            var roles = rawData.Select(r =>
-            {
-                var skillIds = SafeParseIds(r.role.Skills);
-                var licenseIds = SafeParseIds(r.role.License);
-
-                return new RoleListDto
+                // 🔍 Search
+                if (!string.IsNullOrWhiteSpace(search))
                 {
-                    Id = r.role.Id,
-                    Unique_id = r.role.UniqueId,
+                    query = query.Where(x =>
+                        (x.role.Name != null && x.role.Name.Contains(search)) ||
+                        (x.role.Description != null && x.role.Description.Contains(search)) ||
+                        (x.org != null && x.org.Name != null && x.org.Name.Contains(search)) ||
+                        (x.user != null && x.user.Name != null && x.user.Name.Contains(search))
+                    );
+                }
 
-                    Report_to_role = string.IsNullOrEmpty(r.role.ReportToRole) ? null : int.Parse(r.role.ReportToRole),
-                    Report_to_role_name = r.reportRole?.Name,
+                var total = await query.CountAsync();
 
-                    Hierarchy = r.role.Hierarchy,
-                    Qualification = r.role.QualificationId,
+                if (!all)
+                    query = query.Skip((page - 1) * pageSize).Take(pageSize);
 
-                    Year_of_experience = r.role.YearOfExperience,
+                var rawData = await query.ToListAsync();
 
-                    License = licenseIds,
+                // 🧠 Collect all ids
+                var allSkillIds = new HashSet<int>();
+                var allLicenseIds = new HashSet<int>();
 
-                    Other_requirements = r.role.OtherRequirements,
-                    Select_other_requirements = r.role.SelectOtherRequirements,
+                foreach (var r in rawData)
+                {
+                    allSkillIds.UnionWith(SafeParseIds(r.role.Skills));
+                    allLicenseIds.UnionWith(SafeParseIds(r.role.License));
+                }
 
-                    Name = r.role.Name,
-                    Description = r.role.Description,
+                var skills = await _context.Skills
+                    .Where(x => allSkillIds.Contains(x.Id))
+                    .ToDictionaryAsync(x => x.Id, x => x.Name);
 
-                    Organization = r.role.OrganizationId,
-                    Organization_name = r.org?.Name,
+                var licenses = await _context.Licences
+                    .Where(x => allLicenseIds.Contains(x.Id))
+                    .ToDictionaryAsync(x => x.Id, x => x.Name);
 
-                    //Header_image = r.role,
-                    //Footer_image = r.role.FooterImage,
-                    //Business_logo = r.role.BusinessLogo,
 
-                    Created_by_id = r.user?.Id,
-                    Created_by = r.user?.Name,
-                    Created_by_profile = r.user?.Profile,
-                    Created_by_surname = r.user?.Surname,
+                // 🎯 Final shaping
+                var roles = rawData.Select(r =>
+                {
+                    var skillIds = SafeParseIds(r.role.Skills);
+                    var licenseIds = SafeParseIds(r.role.License);
 
-                    Hierarchy_name = r.hierarchy?.Name,
-                    Qualification_name = r.qualification?.Name,
+                    return new RoleListDto
+                    {
+                        Id = r.role.Id,
+                        Unique_id = r.role.UniqueId,
 
-                    SkillsDetail = skillIds
-                        .Where(id => skills.ContainsKey(id))
-                        .Select(id => new IdNameDto { Id = id, Name = skills[id] })
-                        .ToList(),
+                        Report_to_role = string.IsNullOrEmpty(r.role.ReportToRole) ? null : int.Parse(r.role.ReportToRole),
+                        Report_to_role_name = r.reportRole?.Name,
 
-                    LicenseDetail = licenseIds
-                        .Where(id => licenses.ContainsKey(id))
-                        .Select(id => new IdNameDto { Id = id, Name = licenses[id] })
-                        .ToList(),
+                        Hierarchy = r.role.Hierarchy,
+                        Qualification = r.role.QualificationId,
 
-                 
+                        Year_of_experience = r.role.YearOfExperience,
+
+                        License = licenseIds,
+
+                        Other_requirements = r.role.OtherRequirements,
+                        Select_other_requirements = r.role.SelectOtherRequirements,
+
+                        Name = r.role.Name,
+                        Description = r.role.Description,
+
+                        Organization = r.role.OrganizationId,
+                        Organization_name = r.org?.Name,
+
+                        //Header_image = r.role,
+                        //Footer_image = r.role.FooterImage,
+                        //Business_logo = r.role.BusinessLogo,
+
+                        Created_by_id = r.user?.Id,
+                        Created_by = r.user?.Name,
+                        Created_by_profile = r.user?.Profile,
+                        Created_by_surname = r.user?.Surname,
+
+                        Hierarchy_name = r.hierarchy?.Name,
+                        Qualification_name = r.qualification?.Name,
+
+                        SkillsDetail = skillIds
+                            .Where(id => skills.ContainsKey(id))
+                            .Select(id => new IdNameDto { Id = id, Name = skills[id] })
+                            .ToList(),
+
+                        LicenseDetail = licenseIds
+                            .Where(id => licenses.ContainsKey(id))
+                            .Select(id => new IdNameDto { Id = id, Name = licenses[id] })
+                            .ToList(),
+
+
+                    };
+                }).ToList();
+
+                return new
+                {
+                    status = true,
+                    data = roles,
+                    total
                 };
-            }).ToList();
-
-            return new
+            }
+            catch (Exception)
             {
-                status = true,
-                data = roles,
-                total
-            };
+
+                throw;
+            }
         }
 
         public async Task<object> GetRoleByIdAsync(int id)
         {
-            var query =
+            try
+            {
+                var query =
        from role in _context.Roles
 
        join user in _context.Users
@@ -196,66 +206,73 @@ namespace VuSaniClientApi.Infrastructure.Repositories.RoleRepository
            reportRole
        };
 
-            var rawData = await query.FirstOrDefaultAsync();
+                var rawData = await query.FirstOrDefaultAsync();
 
-            if (rawData == null)
-            {
-                return new { status = false, message = "Role not found" };
+                if (rawData == null)
+                {
+                    return new { status = false, message = "Role not found" };
+                }
+
+                // Parse skills and licenses
+                var skillIds = SafeParseIds(rawData.role.Skills);
+                var licenseIds = SafeParseIds(rawData.role.License);
+
+                // Get skills details
+                var skills = await _context.Skills
+                    .Where(x => skillIds.Contains(x.Id))
+                    .Select(x => new IdNameDto { Id = x.Id, Name = x.Name })
+                    .ToListAsync();
+
+                // Get licenses details
+                var licenses = await _context.Licences
+                    .Where(x => licenseIds.Contains(x.Id))
+                    .Select(x => new IdNameDto { Id = x.Id, Name = x.Name })
+                    .ToListAsync();
+
+                // Decode description
+                var description = Models.Helpers.DecodeHelper.DecodeSingle(rawData.role.Description);
+
+                var roleDto = new RoleListDto
+                {
+                    Id = rawData.role.Id,
+                    Unique_id = rawData.role.UniqueId,
+                    Report_to_role = string.IsNullOrEmpty(rawData.role.ReportToRole) ? null : int.Parse(rawData.role.ReportToRole),
+                    Report_to_role_name = rawData.reportRole?.Name,
+                    Hierarchy = rawData.role.Hierarchy,
+                    Qualification = rawData.role.QualificationId,
+                    Year_of_experience = rawData.role.YearOfExperience,
+                    License = licenseIds,
+                    Other_requirements = rawData.role.OtherRequirements,
+                    Select_other_requirements = rawData.role.SelectOtherRequirements,
+                    Level = rawData.role.Level,
+                    Name = rawData.role.Name,
+                    Description = description,
+                    Organization = rawData.role.OrganizationId,
+                    Organization_name = rawData.org?.Name,
+                    Department = rawData.role.Department,
+                    Created_by_id = rawData.user?.Id,
+                    Created_by = rawData.user?.Name,
+                    Created_by_profile = rawData.user?.Profile,
+                    Created_by_surname = rawData.user?.Surname,
+                    Hierarchy_name = rawData.hierarchy?.Name,
+                    Qualification_name = rawData.qualification?.Name,
+                    SkillsDetail = skills,
+                    LicenseDetail = licenses,
+                    Skills = skillIds
+                };
+
+                return new
+                {
+                    status = true,
+                    data = roleDto
+                };
+
             }
-
-            // Parse skills and licenses
-            var skillIds = SafeParseIds(rawData.role.Skills);
-            var licenseIds = SafeParseIds(rawData.role.License);
-
-            // Get skills details
-            var skills = await _context.Skills
-                .Where(x => skillIds.Contains(x.Id))
-                .Select(x => new IdNameDto { Id = x.Id, Name = x.Name })
-                .ToListAsync();
-
-            // Get licenses details
-            var licenses = await _context.Licences
-                .Where(x => licenseIds.Contains(x.Id))
-                .Select(x => new IdNameDto { Id = x.Id, Name = x.Name })
-                .ToListAsync();
-
-            // Decode description
-            var description = Models.Helpers.DecodeHelper.DecodeSingle(rawData.role.Description);
-
-            var roleDto = new RoleListDto
+            catch (Exception)
             {
-                Id = rawData.role.Id,
-                Unique_id = rawData.role.UniqueId,
-                Report_to_role = string.IsNullOrEmpty(rawData.role.ReportToRole) ? null : int.Parse(rawData.role.ReportToRole),
-                Report_to_role_name = rawData.reportRole?.Name,
-                Hierarchy = rawData.role.Hierarchy,
-                Qualification = rawData.role.QualificationId,
-                Year_of_experience = rawData.role.YearOfExperience,
-                License = licenseIds,
-                Other_requirements = rawData.role.OtherRequirements,
-                Select_other_requirements = rawData.role.SelectOtherRequirements,
-                Level = rawData.role.Level,
-                Name = rawData.role.Name,
-                Description = description,
-                Organization = rawData.role.OrganizationId,
-                Organization_name = rawData.org?.Name,
-                Department = rawData.role.Department,
-                Created_by_id = rawData.user?.Id,
-                Created_by = rawData.user?.Name,
-                Created_by_profile = rawData.user?.Profile,
-                Created_by_surname = rawData.user?.Surname,
-                Hierarchy_name = rawData.hierarchy?.Name,
-                Qualification_name = rawData.qualification?.Name,
-                SkillsDetail = skills,
-                LicenseDetail = licenses,
-                Skills = skillIds
-            };
 
-            return new
-            {
-                status = true,
-                data = roleDto
-            };
+                throw;
+            }
         }
 
         private static List<int> SafeParseIds(string? value)

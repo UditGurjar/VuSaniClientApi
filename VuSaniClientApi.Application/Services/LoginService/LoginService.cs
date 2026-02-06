@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -94,13 +94,13 @@ namespace VuSaniClientApi.Application.Services.LoginService
         {
             var claims = new[]
             {
-            new Claim("sessionEmail", user.Email),
-            new Claim("sessionid", user.Id.ToString()),
-            new Claim("sessionidRole", "2"),
-            new Claim("sessionOrganization", user.Organization.ToString()),
-            new Claim("sessionMyOrganization", user.My_Organization.ToString()),
-            new Claim("isSuperAdmin", user.Is_Super_Admin.ToString())
-        };
+                new Claim("sessionEmail", user.Email ?? string.Empty),
+                new Claim("sessionid", user.Id.ToString()),
+                new Claim("sessionidRole", user.Role?.ToString() ?? "0"),
+                new Claim("sessionOrganization", user.Organization ?? string.Empty),
+                new Claim("sessionMyOrganization", user.My_Organization?.ToString() ?? "0"),
+                new Claim("isSuperAdmin", (user.Is_Super_Admin ?? 0).ToString())
+            };
             var jwtSettings = _configuration.GetSection("Jwt");
 
             var key = new SymmetricSecurityKey(
