@@ -29,6 +29,8 @@ namespace VuSaniClientApi.Models.DTOs
         public string? OrganizationName { get; set; }
         /// <summary>Work location from organization's business address (same as Node.js: organization.business_address as work_location).</summary>
         public string? BusinessAddress { get; set; }
+        /// <summary>Alias for BusinessAddress - frontend expects workLocation</summary>
+        public string? WorkLocation { get; set; }
         public int? Department { get; set; }
         public string? DepartmentName { get; set; }
         public int? Role { get; set; }
@@ -83,9 +85,8 @@ namespace VuSaniClientApi.Models.DTOs
         public string? RaceName { get; set; }
         public string? PersonWithDisabilities { get; set; }
         public string? Disability { get; set; }
-        // ? correct
-        //public List<int> Disability { get; set; } = new();
-        //public List<string> DisabilityName { get; set; } = new();
+        /// <summary>List of disability names resolved from Disability IDs</summary>
+        public List<string> DisabilityName { get; set; } = new();
         public int? Language { get; set; }
         public string? LanguageName { get; set; }
         public string? ResidentialAddress { get; set; }

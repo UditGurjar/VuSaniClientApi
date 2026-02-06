@@ -122,7 +122,7 @@ namespace VuSaniClientApi.Controllers
         /// </summary>
         [Authorize]
         [HttpGet("get-reason-for-inactive")]
-        [SideBarPermissionAttributeTest("view", 374, "reason_for_inactive")]
+       // [SideBarPermissionAttributeTest("view", 374, "reason_for_inactive")]
 
         public async Task<IActionResult> GetReasonForInactive(
             int page = 1,

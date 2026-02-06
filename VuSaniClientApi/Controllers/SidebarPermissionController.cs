@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
@@ -17,12 +17,13 @@ namespace VuSaniClientApi.Controllers
         }
 
         [HttpGet("sidebar")]
-        public async Task<IActionResult> GetSidebar(int userId)
+        public async Task<IActionResult> GetSidebar([FromQuery] int userId)
         {
             try
             {
-
+                
                 var result = await _sidebarService.GetSidebarAsync(userId);
+                
 
                 return Ok(new
                 {

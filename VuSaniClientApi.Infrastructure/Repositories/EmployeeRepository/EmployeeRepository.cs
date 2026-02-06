@@ -131,6 +131,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     MyOrganization = x.user.MyOrganization,
                     OrganizationName = x.org?.Name,
                     BusinessAddress = x.org?.BusinessAddress,
+                    WorkLocation = x.org?.BusinessAddress,
                     Department = x.user.Department,
                     DepartmentName = x.dept?.Name,
                     Role = x.user.RoleId,
@@ -254,6 +255,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     MyOrganization = rawData.user.MyOrganization,
                     OrganizationName = rawData.org?.Name,
                     BusinessAddress = rawData.org?.BusinessAddress,
+                    WorkLocation = rawData.org?.BusinessAddress,
                     Department = rawData.user.Department,
                     DepartmentName = rawData.dept?.Name,
                     Role = rawData.user.RoleId,
@@ -320,6 +322,20 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                         .FirstOrDefaultAsync();
                     if (rh != null)
                         employee.HierarchyLevelName = rh;
+                }
+
+                // Resolve disability IDs to names
+                if (!string.IsNullOrEmpty(employee.Disability))
+                {
+                    var disabilityIds = SafeParseIds(employee.Disability);
+                    if (disabilityIds.Any())
+                    {
+                        var disabilityNames = await _context.Disabilities.AsNoTracking()
+                            .Where(d => disabilityIds.Contains(d.Id))
+                            .Select(d => d.Name)
+                            .ToListAsync();
+                        employee.DisabilityName = disabilityNames;
+                    }
                 }
 
                 // Load emergency contact details from NextOfKin table
@@ -430,7 +446,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                     EmployeeDepartment = request.EmployeeDepartment,
                     EmployeeDepartmentInfo = request.EmployeeDepartmentInfo,
                     RoleId = request.Role,
-                    RoleDesc = GeneralHelper.EncodeSingle(request.RoleDescription),
+                    RoleDesc = request.RoleDescription,
                     EmployeeTypeId = request.EmployeeType,
                     EmploymentStatus = employmentStatus ?? request.EmploymentStatus,
                     DateOfEmployment = request.DateOfEmployment,
@@ -583,7 +599,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                 if (request.EmployeeDepartmentInfo.HasValue) employee.EmployeeDepartmentInfo = request.EmployeeDepartmentInfo;
                 if (request.Role.HasValue) employee.RoleId = request.Role;
                 if (!string.IsNullOrEmpty(request.RoleDescription))
-                    employee.RoleDesc = GeneralHelper.EncodeSingle(request.RoleDescription);
+                    employee.RoleDesc = request.RoleDescription;
                 if (request.EmployeeType.HasValue) employee.EmployeeTypeId = request.EmployeeType;
                 if (request.EmploymentStatus != null) employee.EmploymentStatus = request.EmploymentStatus;
                 if (request.DateOfEmployment.HasValue) employee.DateOfEmployment = request.DateOfEmployment;

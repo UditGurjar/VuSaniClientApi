@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -328,7 +328,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.RoleRepository
 
                     // Update fields
                     existingRole.Name = request.Name;
-                    existingRole.Description = GeneralHelper.EncodeSingle(request.Description);
+                    existingRole.Description = request.Description;
                     existingRole.OrganizationId = organizationId;
                     existingRole.License = request.License != null ? JsonSerializer.Serialize(request.License) : null;
                     existingRole.Skills = request.Skills != null ? JsonSerializer.Serialize(request.Skills) : null;
@@ -370,7 +370,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.RoleRepository
                     var newRole = new Role
                     {
                         Name = request.Name,
-                        Description = GeneralHelper.EncodeSingle(request.Description),
+                        Description = request.Description,
                         OrganizationId = organizationId,
                         License = request.License != null ? JsonSerializer.Serialize(request.License) : null,
                         Skills = request.Skills != null ? JsonSerializer.Serialize(request.Skills) : null,

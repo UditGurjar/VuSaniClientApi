@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -13,6 +14,11 @@ namespace VuSaniClientApi.Application.Services.SoftwareAccessService
     {
         private readonly ApplicationDbContext _context;
         private readonly ISidebarRepository _sidebarRepository;
+        private static readonly JsonSerializerOptions _jsonOptions = new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            PropertyNameCaseInsensitive = true
+        };
 
         public SoftwareAccessService(ApplicationDbContext context, ISidebarRepository sidebarRepository)
         {
@@ -22,7 +28,9 @@ namespace VuSaniClientApi.Application.Services.SoftwareAccessService
 
         public async Task<bool> UpdateSoftwareAccessAsync(UpdateSoftwareAccessDto dto)
         {
-            var permissionJson = JsonSerializer.Serialize(dto.Permission ?? new List<SidebarPermissionDto>());
+            var permissionJson = JsonSerializer.Serialize(dto.Permission ?? new List<SidebarPermissionDto>(), _jsonOptions);
+           // Log.Information("UpdateSoftwareAccessAsync: Type={Type}, Id={Id}, OrgId={OrgId}, PermissionCount={Count}, JSON={Json}",
+               // dto.Type, dto.Id, dto.OrganizationId, dto.Permission?.Count ?? 0, permissionJson);
 
             if (dto.Type?.ToLowerInvariant() == "role")
             {
@@ -48,10 +56,20 @@ namespace VuSaniClientApi.Application.Services.SoftwareAccessService
                 var user = await _context.Users.FindAsync(dto.Id);
                 if (user != null)
                 {
+                    Log.Information("Updating user permissions: UserId={UserId}, Name={Name}, OldPermission={OldPerm}",
+                        user.Id, user.Name, user.Permission?.Substring(0, Math.Min(100, user.Permission?.Length ?? 0)) ?? "(null)");
+                    
                     user.OrganizationAccess = dto.Organizations;
                     user.SpecialPermission = 1;
                     user.Permission = permissionJson;
                     await _context.SaveChangesAsync();
+                    
+                    Log.Information("User permissions saved successfully: UserId={UserId}, NewPermission={NewPerm}",
+                        user.Id, permissionJson.Substring(0, Math.Min(100, permissionJson.Length)));
+                }
+                else
+                {
+                    Log.Warning("User not found for permission update: Id={Id}", dto.Id);
                 }
             }
 

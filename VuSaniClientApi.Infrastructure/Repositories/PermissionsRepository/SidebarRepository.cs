@@ -30,29 +30,39 @@ namespace VuSaniClientApi.Infrastructure.Repositories.PermissionsRepository
         {
             var user = await _context.Users
                 .Where(x => x.Id == userId)
-                .Select(x => new { x.Permission, x.RoleId })    
-                .FirstOrDefaultAsync();
+                .Select(x => new { x.Permission, x.RoleId, x.SpecialPermission })    
+                .FirstOrDefaultAsync(); 
 
-            if (user == null) return new List<SidebarModuleDto>();
+            if (user == null)
+            {
+                //Log.Warning("GetSidebarAsync: User not found for userId={UserId}", userId);
+                return new List<SidebarModuleDto>();
+            }
 
             string? permissionJson = user.Permission;
+            string permissionSource = "user";
 
-            if (permissionJson == null)
+            if (string.IsNullOrEmpty(permissionJson))
             {
                 permissionJson = await _context.Roles
                     .Where(x => x.Id == user.RoleId)
                     .Select(x => x.Permission)
                     .FirstOrDefaultAsync();
+                permissionSource = "role";
             }
+
+            //Serilog.Log.Information("GetSidebarAsync: userId={UserId}, roleId={RoleId}, specialPermission={SpecialPermission}, source={Source}, permissionJson={Json}",
+                //userId, user.RoleId, user.SpecialPermission, permissionSource, permissionJson ?? "(null)");
+
             var permissions = string.IsNullOrEmpty(permissionJson)
-          ? new List<SidebarPermissionDto>()
-          : JsonSerializer.Deserialize<List<SidebarPermissionDto>>(permissionJson,
-              new JsonSerializerOptions
-              {
-                  PropertyNameCaseInsensitive = true
-              });
+                ? new List<SidebarPermissionDto>()
+                : JsonSerializer.Deserialize<List<SidebarPermissionDto>>(permissionJson,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
 
-
+            //Serilog.Log.Information("GetSidebarAsync: Deserialized {Count} permission entries", permissions?.Count ?? 0);
 
             return await GetModulesAsync(permissions ?? new(), 0);
         }
