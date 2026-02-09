@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -171,6 +171,35 @@ namespace VuSaniClientApi.Infrastructure.Helpers
                                     .FirstOrDefaultAsync();
                                 break;
 
+                            case "hseappointments":
+                            case "hse_appointment":
+                            case "hseappointment":
+                                maxUniqueId = await context.HseAppointments
+                                    .Where(h => h.UniqueId != null && h.UniqueId.StartsWith(id))
+                                    .OrderByDescending(h => h.Id)
+                                    .Select(h => h.UniqueId)
+                                    .FirstOrDefaultAsync();
+                                break;
+
+                            case "appointmenttypes":
+                            case "appointment_type":
+                            case "appointmenttype":
+                                maxUniqueId = await context.AppointmentTypes
+                                    .Where(a => a.UniqueId != null && a.UniqueId.StartsWith(id))
+                                    .OrderByDescending(a => a.Id)
+                                    .Select(a => a.UniqueId)
+                                    .FirstOrDefaultAsync();
+                                break;
+
+                            case "locations":
+                            case "location":
+                                maxUniqueId = await context.Locations
+                                    .Where(l => l.UniqueId != null && l.UniqueId.StartsWith(id))
+                                    .OrderByDescending(l => l.Id)
+                                    .Select(l => l.UniqueId)
+                                    .FirstOrDefaultAsync();
+                                break;
+
                             default:
                                 // For unknown tables, throw exception to force explicit table handling
                                 throw new NotSupportedException($"Table '{tableName}' is not supported for unique ID generation. Please add it to the switch statement in GeneralHelper.UniqueIdGeneratorAsync");
@@ -289,7 +318,7 @@ namespace VuSaniClientApi.Infrastructure.Helpers
             {
                 status = status.ToLower();
                 string message = "";
-                return;
+                
                 switch (status)
                 {
                     case "update":

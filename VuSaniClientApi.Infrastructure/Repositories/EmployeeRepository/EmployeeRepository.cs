@@ -498,7 +498,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.EmployeeRepository
                 }
 
                 // Insert activity log
-                //await GeneralHelper.InsertActivityLogAsync(_context, userId, "create", "Employee", newEmployee.Id);
+                await GeneralHelper.InsertActivityLogAsync(_context, userId, "create", "Employee", newEmployee.Id);
 
                 return new { status = true, message = "Record created successfully", id = newEmployee.Id };
             }

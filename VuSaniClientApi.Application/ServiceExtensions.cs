@@ -17,6 +17,9 @@ using VuSaniClientApi.Application.Services.RoleService;
 using VuSaniClientApi.Application.Services.SkillService;
 using VuSaniClientApi.Application.Services.SoftwareAccessService;
 using VuSaniClientApi.Application.Services.SoftwareAccessRequestService;
+using VuSaniClientApi.Application.Services.ActivityLogService;
+using VuSaniClientApi.Application.Services.EmailService;
+using VuSaniClientApi.Application.Services.HseAppointmentService;
 
 namespace VuSaniClientApi.Application
 {
@@ -37,6 +40,9 @@ namespace VuSaniClientApi.Application
             services.AddScoped<IMasterDataService, MasterDataService>();
             services.AddScoped<ISoftwareAccessService, SoftwareAccessService>();
             services.AddScoped<ISoftwareAccessRequestService, SoftwareAccessRequestService>();
+            services.AddScoped<IActivityLogService, ActivityLogService>();
+            services.AddScoped<IHseAppointmentService, HseAppointmentService>();
+            services.AddScoped<IEmailService, EmailService>();
             return services;
         }
     }

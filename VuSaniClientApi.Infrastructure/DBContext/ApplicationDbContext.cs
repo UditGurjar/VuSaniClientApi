@@ -41,6 +41,11 @@ namespace VuSaniClientApi.Infrastructure.DBContext
         public DbSet<TerminationNotificationLog> TerminationNotificationLogs { get; set; }
         public DbSet<SoftwareAccessRequest> SoftwareAccessRequests { get; set; }
 
+        // HSE Appointment related tables (structuralrole schema)
+        public DbSet<HseAppointment> HseAppointments { get; set; }
+        public DbSet<AppointmentType> AppointmentTypes { get; set; }
+        public DbSet<Location> Locations { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Gender>().HasData(
@@ -102,6 +107,47 @@ namespace VuSaniClientApi.Infrastructure.DBContext
             {
                 e.ToTable(nameof(SoftwareAccessRequest), "Software");
                 e.Property(x => x.Status).HasMaxLength(50);
+            });
+
+            // HSE Appointment entities (structuralrole schema)
+            modelBuilder.Entity<HseAppointment>(e =>
+            {
+                e.ToTable(nameof(HseAppointment), "Structuralrole");
+                e.Property(x => x.Deleted).HasDefaultValue(false);
+                e.Property(x => x.Status).HasMaxLength(50).HasDefaultValue("PendingAcceptance");
+                
+                // Configure multiple FK to User table
+                e.HasOne(x => x.AppointerUser)
+                    .WithMany()
+                    .HasForeignKey(x => x.AppointsUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                    
+                e.HasOne(x => x.AppointedUser)
+                    .WithMany()
+                    .HasForeignKey(x => x.AppointedUserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+                    
+                e.HasOne(x => x.CreatedByUser)
+                    .WithMany()
+                    .HasForeignKey(x => x.CreatedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+                    
+                e.HasOne(x => x.UpdatedByUser)
+                    .WithMany()
+                    .HasForeignKey(x => x.UpdatedBy)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<AppointmentType>(e =>
+            {
+                e.ToTable(nameof(AppointmentType), "Structuralrole");
+                e.Property(x => x.Deleted).HasDefaultValue(false);
+            });
+
+            modelBuilder.Entity<Location>(e =>
+            {
+                e.ToTable(nameof(Location), "Structuralrole");
+                e.Property(x => x.Deleted).HasDefaultValue(false);
             });
 
             //// ✅ -------- DUMMY DATA SEEDING --------
