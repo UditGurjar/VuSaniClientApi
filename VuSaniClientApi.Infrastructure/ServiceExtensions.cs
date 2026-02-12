@@ -19,7 +19,9 @@ using VuSaniClientApi.Infrastructure.Repositories.RoleRepository;
 using VuSaniClientApi.Infrastructure.Repositories.SkillRepository;
 using VuSaniClientApi.Infrastructure.Repositories.SoftwareAccessRequestRepository;
 using VuSaniClientApi.Infrastructure.Repositories.ActivityLogRepository;
+using VuSaniClientApi.Infrastructure.Repositories.AppointmentTypeRepository;
 using VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository;
+using VuSaniClientApi.Infrastructure.Repositories.LocationRepository;
 
 namespace VuSaniClientApi.Infrastructure
 {
@@ -43,6 +45,8 @@ namespace VuSaniClientApi.Infrastructure
             services.AddScoped<ISoftwareAccessRequestRepository, SoftwareAccessRequestRepository>();
             services.AddScoped<IActivityLogRepository, ActivityLogRepository>();
             services.AddScoped<IHseAppointmentRepository, HseAppointmentRepository>();
+            services.AddScoped<IAppointmentTypeRepository, AppointmentTypeRepository>();
+            services.AddScoped<ILocationRepository, LocationRepository>();
 
             return services;
         }

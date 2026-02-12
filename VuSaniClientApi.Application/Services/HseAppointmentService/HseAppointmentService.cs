@@ -60,5 +60,15 @@ namespace VuSaniClientApi.Application.Services.HseAppointmentService
         {
             return await _hseAppointmentRepository.RenewAppointmentAsync(request, userId);
         }
+
+        public async Task<object> AcceptByTokenAsync(string token)
+        {
+            return await _hseAppointmentRepository.AcceptByTokenAsync(token);
+        }
+
+        public async Task<object> RejectByTokenAsync(string token, string rejectionReason)
+        {
+            return await _hseAppointmentRepository.RejectByTokenAsync(token, rejectionReason);
+        }
     }
 }

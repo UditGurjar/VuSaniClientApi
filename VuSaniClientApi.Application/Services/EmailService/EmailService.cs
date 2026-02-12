@@ -1,11 +1,14 @@
 using Microsoft.Extensions.Configuration;
+using MimeKit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using MailKit.Net.Smtp;
 using System.Threading.Tasks;
+using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
 namespace VuSaniClientApi.Application.Services.EmailService
 {
@@ -16,6 +19,43 @@ namespace VuSaniClientApi.Application.Services.EmailService
         public EmailService(IConfiguration configuration)
         {
             _configuration = configuration;
+        }
+        public async Task SendEmailUsingGmail(string sender, List<string> to, string subject, string body)
+        {
+            try
+            {
+                string fromEmail = _configuration["SettingsSection:EmailAddress"] ?? "";
+                string password = _configuration["SettingsSection:password"] ?? "";
+                string host = _configuration["SettingsSection:Host"] ?? "";
+                int port = Convert.ToInt32(_configuration["SettingsSection:Port"] ?? "587");
+
+                var emailMessage = new MimeMessage();
+                emailMessage.From.Add(new MailboxAddress(sender, fromEmail));
+
+                foreach (var emailAddress in to)
+                {
+                    emailMessage.To.Add(MailboxAddress.Parse(emailAddress));
+                }
+
+                emailMessage.Subject = subject;
+                emailMessage.Body = new TextPart("html") { Text = body };
+
+                using var smtp = new SmtpClient();
+                // Connect to the SMTP server
+                await smtp.ConnectAsync(host, port, MailKit.Security.SecureSocketOptions.StartTls);
+                // Authenticate using App Password
+                await smtp.AuthenticateAsync(fromEmail, password);
+                // Send the email
+                await smtp.SendAsync(emailMessage);
+                // Disconnect gracefully
+                await smtp.DisconnectAsync(true);
+            }
+            catch (Exception ex)
+            {
+                // Log the exception or throw
+                Console.WriteLine($"Error sending email: {ex.Message}");
+                throw;
+            }
         }
 
         public async Task SendTerminationReminderAsync(string toEmail, string employeeName, DateTime terminationDate, int intervalDays)
@@ -40,7 +80,7 @@ Please ensure all handover and exit formalities are completed.
 This is an automated message from VuSani Employee Management.
 ".Trim();
 
-            await SendEmailAsync(toEmail, subject, body, isHtml: false);
+           // await SendEmailUsingGmail(toEmail, subject, body);
         }
 
         public async Task SendHseAppointmentAppointerEmailAsync(
@@ -65,7 +105,7 @@ This is an automated message from VuSani Employee Management.
                 endDate,
                 "You have been recorded as the <strong>Appointer</strong> for the following HSE Legal Appointment.");
 
-            await SendEmailAsync(toEmail, subject, body, isHtml: true);
+            //await SendEmailAsync(toEmail, subject, body, isHtml: true);
         }
 
         public async Task SendHseAppointmentAppointedEmailAsync(
@@ -90,7 +130,7 @@ This is an automated message from VuSani Employee Management.
                 endDate,
                 "You have been <strong>appointed</strong> for the following HSE Legal Appointment.");
 
-            await SendEmailAsync(toEmail, subject, body, isHtml: true);
+         //   await SendEmailAsync(toEmail, subject, body, isHtml: true);
         }
 
         public async Task SendHseAppointmentEndDateReminderAsync(
@@ -149,7 +189,7 @@ This is an automated message from VuSani Employee Management.
 </body>
 </html>".Trim();
 
-            await SendEmailAsync(toEmail, subject, body, isHtml: true);
+            //await SendEmailAsync(toEmail, subject, body, isHtml: true);
         }
 
         public async Task SendHseAppointmentStatusChangeEmailAsync(
@@ -203,51 +243,58 @@ This is an automated message from VuSani Employee Management.
 </body>
 </html>".Trim();
 
-            await SendEmailAsync(toEmail, subject, body, isHtml: true);
+            //await SendEmailAsync(toEmail, subject, body, isHtml: true);
         }
+
+        public async Task SendHseAppointmentActionEmailAsync(
+       string toEmail,
+       string appointerName,
+       string appointedEmployeeName,
+       string companyName,
+       string hseAppointmentName,
+       string effectiveDate,
+       string endDate,
+       string actionToken,
+       string apiBaseUrl,
+       string frontendBaseUrl)
+        {
+            if (string.IsNullOrWhiteSpace(toEmail))
+                return;
+
+            var acceptUrl = $"{apiBaseUrl}/api/HseAppointment/email-accept?token={actionToken}";
+            var rejectUrl = $"{apiBaseUrl}/api/HseAppointment/email-reject?token={actionToken}";
+
+            var subject = $"Action Required: HSE Appointment - {hseAppointmentName}";
+
+            // Path to template
+            string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "EmailTextFile", "HseAppointedEmployee.txt");
+
+            if (!File.Exists(templatePath))
+                throw new FileNotFoundException("Email template not found.", templatePath);
+
+            var body = await File.ReadAllTextAsync(templatePath);
+            string senderName = "VuSani";
+
+            // Replace placeholders
+            body = body.Replace("{{AppointedEmployeeName}}", appointedEmployeeName)
+                       .Replace("{{AppointerName}}", appointerName)
+                       .Replace("{{CompanyName}}", companyName)
+                       .Replace("{{HseAppointmentName}}", hseAppointmentName)
+                       .Replace("{{EffectiveDate}}", effectiveDate)
+                       .Replace("{{EndDate}}", string.IsNullOrEmpty(endDate) ? "N/A" : endDate)
+                       .Replace("{{AcceptUrl}}", acceptUrl)
+                       .Replace("{{RejectUrl}}", rejectUrl)
+                       .Replace("{{SenderName}}", appointerName)
+                       .Replace("{{CurrentYear}}", DateTime.UtcNow.Year.ToString());
+            List<string> toEmails = new List<string> { toEmail };
+
+            await SendEmailUsingGmail(senderName, toEmails, subject, body);
+        }
+
 
         #region Private Helpers
 
-        private async Task SendEmailAsync(string toEmail, string subject, string body, bool isHtml)
-        {
-            var smtpHost = _configuration["Smtp:Host"];
-            var smtpPort = int.TryParse(_configuration["Smtp:Port"], out var port) ? port : 587;
-            var smtpUser = _configuration["Smtp:Username"];
-            var smtpPassword = _configuration["Smtp:Password"];
-            var fromEmail = _configuration["Smtp:FromEmail"] ?? smtpUser;
-            var fromName = _configuration["Smtp:FromName"] ?? "VuSani Employee Management";
-
-            if (string.IsNullOrWhiteSpace(smtpHost) || string.IsNullOrWhiteSpace(smtpUser))
-            {
-                // SMTP not configured - silently skip
-                return;
-            }
-
-            try
-            {
-                using var client = new SmtpClient(smtpHost, smtpPort)
-                {
-                    EnableSsl = true,
-                    Credentials = string.IsNullOrEmpty(smtpPassword) ? null : new NetworkCredential(smtpUser, smtpPassword)
-                };
-
-                var mail = new MailMessage
-                {
-                    From = new MailAddress(fromEmail, fromName),
-                    Subject = subject,
-                    Body = body,
-                    IsBodyHtml = isHtml
-                };
-                mail.To.Add(toEmail);
-
-                await client.SendMailAsync(mail);
-            }
-            catch (Exception)
-            {
-                // Log but don't throw - email failure shouldn't break business logic
-            }
-        }
-
+ 
         private static string BuildHseAppointmentEmailBody(
             string title,
             string appointerName,

@@ -5,7 +5,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace VuSaniClientApi.Models.DBModels
 {
     /// <summary>
-    /// Physical location for HSE appointments.
+    /// Location entity used for HSE appointments and across the application.
+    /// Organization is stored as a JSON array string (e.g. "[1,2,3]") for multi-org support.
     /// </summary>
     public class Location
     {
@@ -15,16 +16,22 @@ namespace VuSaniClientApi.Models.DBModels
         [StringLength(255)]
         public string? UniqueId { get; set; }
 
-        [StringLength(255)]
+        [StringLength(250)]
         public string? Name { get; set; }
 
         public string? Description { get; set; }
 
-        [StringLength(255)]
-        public string? Address { get; set; }
+        // Department FK
+        public int? DepartmentId { get; set; }
 
-        // Organization
-        public int? OrganizationId { get; set; }
+        // Organization - stored as JSON array string e.g. "[1,2,3]"
+        public string? Organization { get; set; }
+
+        // Parent location (self-referencing for hierarchy)
+        public int? Parent { get; set; }
+
+        // Static flag - prevents deletion of seed data
+        public int IsStatic { get; set; } = 0;
 
         // Audit fields
         public int? CreatedBy { get; set; }
@@ -34,8 +41,11 @@ namespace VuSaniClientApi.Models.DBModels
         public bool Deleted { get; set; } = false;
 
         // Navigation properties
-        [ForeignKey(nameof(OrganizationId))]
-        public Organization? Organization { get; set; }
+        [ForeignKey(nameof(DepartmentId))]
+        public Department? Department { get; set; }
+
+        [ForeignKey(nameof(Parent))]
+        public Location? ParentLocation { get; set; }
 
         [ForeignKey(nameof(CreatedBy))]
         public User? CreatedByUser { get; set; }

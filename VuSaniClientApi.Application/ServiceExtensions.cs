@@ -18,8 +18,10 @@ using VuSaniClientApi.Application.Services.SkillService;
 using VuSaniClientApi.Application.Services.SoftwareAccessService;
 using VuSaniClientApi.Application.Services.SoftwareAccessRequestService;
 using VuSaniClientApi.Application.Services.ActivityLogService;
+using VuSaniClientApi.Application.Services.AppointmentTypeService;
 using VuSaniClientApi.Application.Services.EmailService;
 using VuSaniClientApi.Application.Services.HseAppointmentService;
+using VuSaniClientApi.Application.Services.LocationService;
 
 namespace VuSaniClientApi.Application
 {
@@ -42,7 +44,11 @@ namespace VuSaniClientApi.Application
             services.AddScoped<ISoftwareAccessRequestService, SoftwareAccessRequestService>();
             services.AddScoped<IActivityLogService, ActivityLogService>();
             services.AddScoped<IHseAppointmentService, HseAppointmentService>();
-            services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IAppointmentTypeService, AppointmentTypeService>();
+            services.AddScoped<ILocationService, LocationService>();
+            services.AddScoped<VuSaniClientApi.Application.Services.EmailService.EmailService>();
+            services.AddScoped<IEmailService>(sp => sp.GetRequiredService<VuSaniClientApi.Application.Services.EmailService.EmailService>());
+            services.AddScoped<VuSaniClientApi.Infrastructure.Services.EmailService.IEmailService>(sp => sp.GetRequiredService<VuSaniClientApi.Application.Services.EmailService.EmailService>());
             return services;
         }
     }

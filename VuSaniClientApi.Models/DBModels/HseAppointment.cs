@@ -5,6 +5,20 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace VuSaniClientApi.Models.DBModels
 {
     /// <summary>
+    /// Enum representing the lifecycle statuses of an HSE Appointment.
+    /// Stored in the database as string values (e.g. "PendingAcceptance", "Active", etc.)
+    /// </summary>
+    public enum HseAppointmentStatus
+    {
+        PendingAcceptance,
+        Active,
+        Rejected,
+        Terminated,
+        Expired,
+        Renewed
+    }
+
+    /// <summary>
     /// HSE Appointment record linking appointer and appointed users with appointment details.
     /// </summary>
     public class HseAppointment
@@ -39,8 +53,14 @@ namespace VuSaniClientApi.Models.DBModels
         public int? DepartmentId { get; set; }
 
         // Status: PendingAcceptance, Active, Rejected, Terminated, Expired, Renewed
-        [StringLength(50)]
-        public string Status { get; set; } = "PendingAcceptance";
+        public HseAppointmentStatus Status { get; set; } = HseAppointmentStatus.PendingAcceptance;
+
+        // Reason for rejection (populated when Status = Rejected)
+        public string? RejectionReason { get; set; }
+
+        // Secure token for email-based accept/reject actions (GUID, unique per appointment)
+        [StringLength(100)]
+        public string? ActionToken { get; set; }
 
         // FK to the renewed-from appointment (null unless this is a renewal)
         public int? RenewedFromId { get; set; }

@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using VuSaniClientApi.Models.DBModels;
 
 namespace VuSaniClientApi.Models.DTOs
 {
@@ -93,7 +94,8 @@ namespace VuSaniClientApi.Models.DTOs
         public int? DdrmId { get; set; }
 
         // Status
-        public string? Status { get; set; }
+        public HseAppointmentStatus? Status { get; set; }
+        public string? RejectionReason { get; set; }
         public int? RenewedFromId { get; set; }
 
         // Agreement fields
@@ -136,7 +138,24 @@ namespace VuSaniClientApi.Models.DTOs
         public int Id { get; set; }
 
         [Required]
-        public string Status { get; set; } = null!; // Active, Rejected, Terminated
+        public HseAppointmentStatus Status { get; set; } // Active, Rejected, Terminated
+
+        /// <summary>
+        /// Required when Status = Rejected. The reason for rejection.
+        /// </summary>
+        public string? RejectionReason { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for email-based rejection (employee clicks Reject in email, submits reason)
+    /// </summary>
+    public class EmailRejectHseAppointmentRequest
+    {
+        [Required]
+        public string Token { get; set; } = null!;
+
+        [Required(ErrorMessage = "Rejection reason is required.")]
+        public string RejectionReason { get; set; } = null!;
     }
 
     /// <summary>

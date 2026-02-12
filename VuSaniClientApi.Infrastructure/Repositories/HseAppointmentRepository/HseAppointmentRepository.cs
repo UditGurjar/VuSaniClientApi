@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,16 +10,21 @@ using VuSaniClientApi.Infrastructure.Helpers;
 using VuSaniClientApi.Models.DBModels;
 using VuSaniClientApi.Models.DTOs;
 using VuSaniClientApi.Models.Helpers;
+using VuSaniClientApi.Infrastructure.Services.EmailService;
 
 namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
 {
     public class HseAppointmentRepository : IHseAppointmentRepository
     {
         private readonly ApplicationDbContext _context;
+        private readonly IEmailService _emailService;
+        private readonly IConfiguration _configuration;
 
-        public HseAppointmentRepository(ApplicationDbContext context)
+        public HseAppointmentRepository(ApplicationDbContext context, IEmailService emailService, IConfiguration configuration)
         {
             _context = context;
+            _emailService = emailService;
+            _configuration = configuration;
         }
 
         public async Task<object> GetHseAppointmentsAsync(int page, int pageSize, bool all, string search, string filter)
@@ -155,9 +161,10 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                     DdrmId = x.hse.DdrmId,
                     
                     // Status - auto-expire if Active and EndDate has passed
-                    Status = (x.hse.Status == "Active" && x.hse.EndDate.HasValue && x.hse.EndDate.Value.Date < DateTime.UtcNow.Date)
-                        ? "Expired"
+                    Status = (x.hse.Status == HseAppointmentStatus.Active && x.hse.EndDate.HasValue && x.hse.EndDate.Value.Date < DateTime.UtcNow.Date)
+                        ? HseAppointmentStatus.Expired
                         : x.hse.Status,
+                    RejectionReason = x.hse.RejectionReason,
                     RenewedFromId = x.hse.RenewedFromId,
 
                     // Agreement
@@ -174,15 +181,15 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                 }).ToList();
 
                 // Auto-expire: update DB for any Active records that have passed EndDate
-                var expiredIds = data.Where(d => d.Status == "Expired").Select(d => d.Id).ToList();
+                var expiredIds = data.Where(d => d.Status == HseAppointmentStatus.Expired).Select(d => d.Id).ToList();
                 if (expiredIds.Any())
                 {
                     var toExpire = await _context.HseAppointments
-                        .Where(h => expiredIds.Contains(h.Id) && h.Status == "Active")
+                        .Where(h => expiredIds.Contains(h.Id) && h.Status == HseAppointmentStatus.Active)
                         .ToListAsync();
                     foreach (var h in toExpire)
                     {
-                        h.Status = "Expired";
+                        h.Status = HseAppointmentStatus.Expired;
                         h.UpdatedAt = DateTime.UtcNow;
                     }
                     if (toExpire.Any()) await _context.SaveChangesAsync();
@@ -296,9 +303,10 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                     DdrmId = result.hse.DdrmId,
 
                     // Status - auto-expire if Active and EndDate has passed
-                    Status = (result.hse.Status == "Active" && result.hse.EndDate.HasValue && result.hse.EndDate.Value.Date < DateTime.UtcNow.Date)
-                        ? "Expired"
+                    Status = (result.hse.Status == HseAppointmentStatus.Active && result.hse.EndDate.HasValue && result.hse.EndDate.Value.Date < DateTime.UtcNow.Date)
+                        ? HseAppointmentStatus.Expired
                         : result.hse.Status,
+                    RejectionReason = result.hse.RejectionReason,
                     RenewedFromId = result.hse.RenewedFromId,
                     
                     AgreementId = result.hse.AgreementId,
@@ -314,12 +322,12 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                 };
 
                 // Auto-expire in DB if needed
-                if (data.Status == "Expired" && result.hse.Status == "Active")
+                if (data.Status == HseAppointmentStatus.Expired && result.hse.Status == HseAppointmentStatus.Active)
                 {
                     var entity = await _context.HseAppointments.FindAsync(id);
                     if (entity != null)
                     {
-                        entity.Status = "Expired";
+                        entity.Status = HseAppointmentStatus.Expired;
                         entity.UpdatedAt = DateTime.UtcNow;
                         await _context.SaveChangesAsync();
                     }
@@ -383,6 +391,9 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                     "UniqueId"
                 );
 
+                // Generate a unique action token for email-based accept/reject
+                var actionToken = Guid.NewGuid().ToString("N");
+
                 var newAppointment = new HseAppointment
                 {
                     UniqueId = uniqueId,
@@ -395,7 +406,8 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                     PhysicalLocation = request.PhysicalLocation,
                     OrganizationId = organizationId,
                     DepartmentId = request.Department,
-                    Status = "PendingAcceptance",
+                    Status = HseAppointmentStatus.PendingAcceptance,
+                    ActionToken = actionToken,
                     CreatedBy = userId,
                     CreatedAt = DateTime.UtcNow,
                     Deleted = false
@@ -407,52 +419,47 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                 // Insert activity log
                 await GeneralHelper.InsertActivityLogAsync(_context, userId, "create", "HSE Appointment", newAppointment.Id);
 
-                // Send emails to appointer and appointed
+                // Send email to appointed user with Accept/Reject action buttons
                 try
                 {
-                    var appointer = await _context.Users
-                        .Where(u => u.Id == request.AppointsUserId)
-                        .Select(u => new { u.Name, u.Surname, u.Email, u.MyOrganization })
-                        .FirstOrDefaultAsync();
-
                     var appointed = await _context.Users
                         .Where(u => u.Id == request.AppointedUserId)
                         .Select(u => new { u.Name, u.Surname, u.Email })
                         .FirstOrDefaultAsync();
 
-                    var appointmentTypeName = request.NameOfAppointment.HasValue
-                        ? await _context.AppointmentTypes
-                            .Where(a => a.Id == request.NameOfAppointment.Value)
-                            .Select(a => a.Name)
-                            .FirstOrDefaultAsync() ?? ""
-                        : "";
-
-                    var companyName = appointer?.MyOrganization.HasValue == true
-                        ? await _context.Organizations
-                            .Where(o => o.Id == appointer.MyOrganization.Value)
-                            .Select(o => o.Name)
-                            .FirstOrDefaultAsync() ?? ""
-                        : "";
-
-                    var appointerFullName = $"{appointer?.Name} {appointer?.Surname}".Trim();
-                    var appointedFullName = $"{appointed?.Name} {appointed?.Surname}".Trim();
-                    var effectiveDateStr = request.EffectiveDate.ToString("dd MMMM yyyy");
-                    var endDateStr = request.EndDate?.ToString("dd MMMM yyyy") ?? "";
-
-                    // Email to Appointer
-                    if (!string.IsNullOrWhiteSpace(appointer?.Email))
-                    {
-                        //await _emailService.SendHseAppointmentAppointerEmailAsync(
-                        //    appointer.Email, appointerFullName, appointedFullName,
-                        //    companyName, appointmentTypeName, effectiveDateStr, endDateStr);
-                    }
-
-                    // Email to Appointed
                     if (!string.IsNullOrWhiteSpace(appointed?.Email))
                     {
-                        //await _emailService.SendHseAppointmentAppointedEmailAsync(
-                        //    appointed.Email, appointerFullName, appointedFullName,
-                        //    companyName, appointmentTypeName, effectiveDateStr, endDateStr);
+                        var appointer = await _context.Users
+                            .Where(u => u.Id == request.AppointsUserId)
+                            .Select(u => new { u.Name, u.Surname, u.MyOrganization })
+                            .FirstOrDefaultAsync();
+
+                        var appointmentTypeName = request.NameOfAppointment.HasValue
+                            ? await _context.AppointmentTypes
+                                .Where(a => a.Id == request.NameOfAppointment.Value)
+                                .Select(a => a.Name)
+                                .FirstOrDefaultAsync() ?? ""
+                            : "";
+
+                        var companyName = appointer?.MyOrganization.HasValue == true
+                            ? await _context.Organizations
+                                .Where(o => o.Id == appointer.MyOrganization.Value)
+                                .Select(o => o.Name)
+                                .FirstOrDefaultAsync() ?? ""
+                            : "";
+
+                        var appointerFullName = $"{appointer?.Name} {appointer?.Surname}".Trim();
+                        var appointedFullName = $"{appointed.Name} {appointed.Surname}".Trim();
+                        var effectiveDateStr = request.EffectiveDate.ToString("dd MMMM yyyy");
+                        var endDateStr = request.EndDate?.ToString("dd MMMM yyyy") ?? "";
+
+                        var apiBaseUrl = _configuration["App:ApiBaseUrl"] ?? "";
+                        var frontendBaseUrl = _configuration["App:FrontendBaseUrl"] ?? "";
+
+                        await _emailService.SendHseAppointmentActionEmailAsync(
+                            appointed.Email, appointerFullName, appointedFullName,
+                            companyName, appointmentTypeName, effectiveDateStr, endDateStr,
+                            actionToken, apiBaseUrl, frontendBaseUrl);
                     }
                 }
                 catch (Exception)
@@ -690,11 +697,11 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                     return new { status = false, message = "HSE Appointment not found" };
 
                 // Validate status transitions per workflow
-                var validTransitions = new Dictionary<string, string[]>
+                var validTransitions = new Dictionary<HseAppointmentStatus, HseAppointmentStatus[]>
                 {
-                    { "PendingAcceptance", new[] { "Active", "Rejected" } },
-                    { "Rejected", new[] { "PendingAcceptance" } },      // Can resubmit
-                    { "Active", new[] { "Terminated" } },               // Terminate by editing
+                    { HseAppointmentStatus.PendingAcceptance, new[] { HseAppointmentStatus.Active, HseAppointmentStatus.Rejected } },
+                    { HseAppointmentStatus.Rejected, new[] { HseAppointmentStatus.PendingAcceptance } },      // Can resubmit
+                    { HseAppointmentStatus.Active, new[] { HseAppointmentStatus.Terminated } },               // Terminate by editing
                 };
 
                 if (!validTransitions.ContainsKey(appointment.Status) ||
@@ -703,62 +710,42 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                     return new { status = false, message = $"Cannot transition from '{appointment.Status}' to '{request.Status}'" };
                 }
 
+                // Require rejection reason when rejecting
+                if (request.Status == HseAppointmentStatus.Rejected && string.IsNullOrWhiteSpace(request.RejectionReason))
+                {
+                    return new { status = false, message = "Rejection reason is required when rejecting an appointment" };
+                }
+
                 appointment.Status = request.Status;
                 appointment.UpdatedBy = userId;
                 appointment.UpdatedAt = DateTime.UtcNow;
+
+                // Save rejection reason
+                if (request.Status == HseAppointmentStatus.Rejected)
+                {
+                    appointment.RejectionReason = request.RejectionReason;
+                }
+
+                // Clear action token once the appointment is accepted or rejected
+                if (request.Status == HseAppointmentStatus.Active || request.Status == HseAppointmentStatus.Rejected)
+                {
+                    appointment.ActionToken = null;
+                }
 
                 await _context.SaveChangesAsync();
 
                 // Activity log
                 var actionDesc = request.Status switch
                 {
-                    "Active" => "accepted",
-                    "Rejected" => "rejected",
-                    "Terminated" => "terminated",
+                    HseAppointmentStatus.Active => "accepted",
+                    HseAppointmentStatus.Rejected => "rejected",
+                    HseAppointmentStatus.Terminated => "terminated",
                     _ => "updated status of"
                 };
                 await GeneralHelper.InsertActivityLogAsync(_context, userId, actionDesc, "HSE Appointment", appointment.Id);
 
-                // Send status change email to both appointer and appointed
-                try
-                {
-                    var appointer = await _context.Users
-                        .Where(u => u.Id == appointment.AppointsUserId)
-                        .Select(u => new { u.Name, u.Surname, u.Email })
-                        .FirstOrDefaultAsync();
-
-                    var appointed = await _context.Users
-                        .Where(u => u.Id == appointment.AppointedUserId)
-                        .Select(u => new { u.Name, u.Surname, u.Email })
-                        .FirstOrDefaultAsync();
-
-                    var appointmentTypeName = appointment.NameOfAppointment.HasValue
-                        ? await _context.AppointmentTypes
-                            .Where(a => a.Id == appointment.NameOfAppointment.Value)
-                            .Select(a => a.Name)
-                            .FirstOrDefaultAsync() ?? ""
-                        : "";
-
-                    var appointedFullName = $"{appointed?.Name} {appointed?.Surname}".Trim();
-
-                    if (!string.IsNullOrWhiteSpace(appointer?.Email))
-                    {
-                        //await _emailService.SendHseAppointmentStatusChangeEmailAsync(
-                        //    appointer.Email, $"{appointer.Name} {appointer.Surname}".Trim(),
-                        //    appointmentTypeName, appointedFullName, request.Status);
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(appointed?.Email))
-                    {
-                        //await _emailService.SendHseAppointmentStatusChangeEmailAsync(
-                        //    appointed.Email, appointedFullName,
-                        //    appointmentTypeName, appointedFullName, request.Status);
-                    }
-                }
-                catch (Exception)
-                {
-                    // Email failure should not fail the status update
-                }
+                // Send status change emails to both appointer and appointed
+                await SendStatusChangeEmailsAsync(appointment, request.Status.ToString());
 
                 return new { status = true, message = $"HSE Appointment {actionDesc} successfully", id = appointment.Id };
             }
@@ -778,11 +765,11 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                 if (original == null)
                     return new { status = false, message = "HSE Appointment not found" };
 
-                if (original.Status != "Expired")
+                if (original.Status != HseAppointmentStatus.Expired)
                     return new { status = false, message = "Only expired appointments can be renewed" };
 
                 // Mark original as Renewed
-                original.Status = "Renewed";
+                original.Status = HseAppointmentStatus.Renewed;
                 original.UpdatedBy = userId;
                 original.UpdatedAt = DateTime.UtcNow;
 
@@ -809,7 +796,8 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                     PhysicalLocation = original.PhysicalLocation,
                     OrganizationId = original.OrganizationId,
                     DepartmentId = original.DepartmentId,
-                    Status = "PendingAcceptance",
+                    Status = HseAppointmentStatus.PendingAcceptance,
+                    ActionToken = Guid.NewGuid().ToString("N"),
                     RenewedFromId = original.Id,
                     CreatedBy = userId,
                     CreatedAt = DateTime.UtcNow,
@@ -823,6 +811,52 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                 await GeneralHelper.InsertActivityLogAsync(_context, userId, "renewed", "HSE Appointment", original.Id);
                 await GeneralHelper.InsertActivityLogAsync(_context, userId, "create", "HSE Appointment", renewed.Id);
 
+                // Send action email to the appointed employee for the renewed appointment
+                try
+                {
+                    var appointer = await _context.Users
+                        .Where(u => u.Id == original.AppointsUserId)
+                        .Select(u => new { u.Name, u.Surname, u.Email, u.MyOrganization })
+                        .FirstOrDefaultAsync();
+
+                    var appointed = await _context.Users
+                        .Where(u => u.Id == original.AppointedUserId)
+                        .Select(u => new { u.Name, u.Surname, u.Email })
+                        .FirstOrDefaultAsync();
+
+                    var appointmentTypeName = original.NameOfAppointment.HasValue
+                        ? await _context.AppointmentTypes
+                            .Where(a => a.Id == original.NameOfAppointment.Value)
+                            .Select(a => a.Name)
+                            .FirstOrDefaultAsync() ?? ""
+                        : "";
+
+                    var companyName = appointer?.MyOrganization.HasValue == true
+                        ? await _context.Organizations
+                            .Where(o => o.Id == appointer.MyOrganization.Value)
+                            .Select(o => o.Name)
+                            .FirstOrDefaultAsync() ?? ""
+                        : "";
+
+                    if (!string.IsNullOrWhiteSpace(appointed?.Email))
+                    {
+                        var apiBaseUrl = _configuration["App:ApiBaseUrl"] ?? "";
+                        var frontendBaseUrl = _configuration["App:FrontendBaseUrl"] ?? "";
+                        await _emailService.SendHseAppointmentActionEmailAsync(
+                            appointed.Email,
+                            $"{appointer?.Name} {appointer?.Surname}".Trim(),
+                            $"{appointed.Name} {appointed.Surname}".Trim(),
+                            companyName, appointmentTypeName,
+                            renewed.EffectiveDate?.ToString("dd MMMM yyyy") ?? "",
+                            renewed.EndDate?.ToString("dd MMMM yyyy") ?? "",
+                            renewed.ActionToken!, apiBaseUrl, frontendBaseUrl);
+                    }
+                }
+                catch (Exception)
+                {
+                    // Email failure should not break the flow
+                }
+
                 return new
                 {
                     status = true,
@@ -834,6 +868,123 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
             catch (Exception)
             {
                 throw;
+            }
+        }
+
+        public async Task<object> AcceptByTokenAsync(string token)
+        {
+            try
+            {
+                var appointment = await _context.HseAppointments
+                    .FirstOrDefaultAsync(h => h.ActionToken == token && h.Deleted == false);
+
+                if (appointment == null)
+                    return new { status = false, message = "Invalid or expired action link." };
+
+                if (appointment.Status != HseAppointmentStatus.PendingAcceptance)
+                    return new { status = false, message = $"This appointment has already been {appointment.Status}. No further action is required." };
+
+                appointment.Status = HseAppointmentStatus.Active;
+                appointment.ActionToken = null; // Invalidate the token after use
+                appointment.UpdatedAt = DateTime.UtcNow;
+                appointment.UpdatedBy = appointment.AppointedUserId;
+
+                await _context.SaveChangesAsync();
+
+                // Activity log
+                if (appointment.AppointedUserId.HasValue)
+                    await GeneralHelper.InsertActivityLogAsync(_context, appointment.AppointedUserId.Value, "accepted", "HSE Appointment", appointment.Id);
+
+                // Send status change emails
+                await SendStatusChangeEmailsAsync(appointment, "Active");
+
+                return new { status = true, message = "HSE Appointment accepted successfully." };
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<object> RejectByTokenAsync(string token, string rejectionReason)
+        {
+            try
+            {
+                var appointment = await _context.HseAppointments
+                    .FirstOrDefaultAsync(h => h.ActionToken == token && h.Deleted == false);
+
+                if (appointment == null)
+                    return new { status = false, message = "Invalid or expired action link." };
+
+                if (appointment.Status != HseAppointmentStatus.PendingAcceptance)
+                    return new { status = false, message = $"This appointment has already been {appointment.Status}. No further action is required." };
+
+                appointment.Status = HseAppointmentStatus.Rejected;
+                appointment.RejectionReason = rejectionReason;
+                appointment.ActionToken = null; // Invalidate the token after use
+                appointment.UpdatedAt = DateTime.UtcNow;
+                appointment.UpdatedBy = appointment.AppointedUserId;
+
+                await _context.SaveChangesAsync();
+
+                // Activity log
+                if (appointment.AppointedUserId.HasValue)
+                    await GeneralHelper.InsertActivityLogAsync(_context, appointment.AppointedUserId.Value, "rejected", "HSE Appointment", appointment.Id);
+
+                // Send status change emails
+                await SendStatusChangeEmailsAsync(appointment, "Rejected");
+
+                return new { status = true, message = "HSE Appointment rejected successfully." };
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Helper to send status change notification emails to both appointer and appointed.
+        /// </summary>
+        private async Task SendStatusChangeEmailsAsync(HseAppointment appointment, string newStatus)
+        {
+            try
+            {
+                var appointer = await _context.Users
+                    .Where(u => u.Id == appointment.AppointsUserId)
+                    .Select(u => new { u.Name, u.Surname, u.Email })
+                    .FirstOrDefaultAsync();
+
+                var appointed = await _context.Users
+                    .Where(u => u.Id == appointment.AppointedUserId)
+                    .Select(u => new { u.Name, u.Surname, u.Email })
+                    .FirstOrDefaultAsync();
+
+                var appointmentTypeName = appointment.NameOfAppointment.HasValue
+                    ? await _context.AppointmentTypes
+                        .Where(a => a.Id == appointment.NameOfAppointment.Value)
+                        .Select(a => a.Name)
+                        .FirstOrDefaultAsync() ?? ""
+                    : "";
+
+                var appointedFullName = $"{appointed?.Name} {appointed?.Surname}".Trim();
+
+                if (!string.IsNullOrWhiteSpace(appointer?.Email))
+                {
+                    await _emailService.SendHseAppointmentStatusChangeEmailAsync(
+                        appointer.Email, $"{appointer.Name} {appointer.Surname}".Trim(),
+                        appointmentTypeName, appointedFullName, newStatus);
+                }
+
+                if (!string.IsNullOrWhiteSpace(appointed?.Email))
+                {
+                    await _emailService.SendHseAppointmentStatusChangeEmailAsync(
+                        appointed.Email, appointedFullName,
+                        appointmentTypeName, appointedFullName, newStatus);
+                }
+            }
+            catch (Exception)
+            {
+                // Email failure should not break the flow
             }
         }
 

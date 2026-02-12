@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,6 +26,7 @@ namespace VuSaniClientApi.Infrastructure.DBContext.Seed
             NextOfKinSeed.Seed(modelBuilder);
             ReasonForInactiveSeed.Seed(modelBuilder);
             DisabilitySeed.Seed(modelBuilder);
+            AppointmentTypeSeed.Seed(modelBuilder);
         }
     }
 }

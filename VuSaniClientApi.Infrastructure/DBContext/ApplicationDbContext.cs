@@ -114,7 +114,14 @@ namespace VuSaniClientApi.Infrastructure.DBContext
             {
                 e.ToTable(nameof(HseAppointment), "Structuralrole");
                 e.Property(x => x.Deleted).HasDefaultValue(false);
-                e.Property(x => x.Status).HasMaxLength(50).HasDefaultValue("PendingAcceptance");
+                e.Property(x => x.Status)
+                    .HasConversion<string>()
+                    .HasMaxLength(50)
+                    .HasDefaultValue(HseAppointmentStatus.PendingAcceptance);
+
+                e.Property(x => x.RejectionReason).HasColumnType("nvarchar(max)");
+                e.Property(x => x.ActionToken).HasMaxLength(100);
+                e.HasIndex(x => x.ActionToken).IsUnique().HasFilter("[ActionToken] IS NOT NULL");
                 
                 // Configure multiple FK to User table
                 e.HasOne(x => x.AppointerUser)

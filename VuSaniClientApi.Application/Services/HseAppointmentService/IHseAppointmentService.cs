@@ -13,5 +13,7 @@ namespace VuSaniClientApi.Application.Services.HseAppointmentService
         Task<object> GetHseHierarchyAsync(int organizationId);
         Task<object> UpdateStatusAsync(UpdateHseAppointmentStatusRequest request, int userId);
         Task<object> RenewAppointmentAsync(RenewHseAppointmentRequest request, int userId);
+        Task<object> AcceptByTokenAsync(string token);
+        Task<object> RejectByTokenAsync(string token, string rejectionReason);
     }
 }

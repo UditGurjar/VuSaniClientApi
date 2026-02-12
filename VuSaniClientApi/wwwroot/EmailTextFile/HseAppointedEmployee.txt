@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HSE Appointment Action Required</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        .email-wrapper {
+            width: 100%;
+            padding: 30px 0;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: #6C1D45;
+            color: #ffffff;
+            padding: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .content {
+            padding: 30px;
+            background-color: #F7EBEB;
+        }
+
+        .content h2 {
+            color: #6C1D45;
+            margin-top: 0;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #6C1D45;
+            display: inline-block;
+            width: 160px;
+        }
+
+        .info-row {
+            margin: 8px 0;
+        }
+
+        .button-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            border-radius: 30px;
+            text-decoration: none;
+            color: #ffffff;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .btn-accept {
+            background-color: #28a745;
+        }
+
+        .btn-reject {
+            background-color: #dc3545;
+        }
+
+        .footer {
+            background-color: #6C1D45;
+            color: #ffffff;
+            text-align: center;
+            padding: 15px;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="email-container">
+
+            <div class="header">
+                Harmony & Help Academy
+            </div>
+
+            <div class="content">
+                <h2>Dear {{AppointedEmployeeName}},</h2>
+
+                <p>
+                    You have been <strong>appointed</strong> for the following HSE Legal Appointment by 
+                    <strong>{{AppointerName}}</strong>.
+                </p>
+
+                <div class="info-row">
+                    <span class="info-label">Company:</span> {{CompanyName}}
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">HSE Appointment:</span> {{HseAppointmentName}}
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Effective Date:</span> {{EffectiveDate}}
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">End Date:</span> {{EndDate}}
+                </div>
+
+                <div class="button-container">
+                    <a href="{{AcceptUrl}}" class="btn btn-accept">✔ Accept</a>
+                    <a href="{{RejectUrl}}" class="btn btn-reject">✖ Reject</a>
+                </div>
+
+                <p style="margin-top:25px;">
+                    Clicking <strong>Accept</strong> will activate this appointment.<br />
+                    Clicking <strong>Reject</strong> will allow you to provide a reason.
+                </p>
+
+                <p style="margin-top: 25px;">
+                    Warm regards,<br />
+                    <strong>{{SenderName}}</strong>
+                </p>
+            </div>
+
+            <div class="footer">
+                &copy; {{CurrentYear}} Harmony & Help Academy <br />
+                Phone: +27 64 506 0161 |
+                Email: <a href="mailto:Support@hhacademy.africa">Support@hhacademy.africa</a>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>
