@@ -58,6 +58,9 @@ namespace VuSaniClientApi.Models.DBModels
         // Reason for rejection (populated when Status = Rejected)
         public string? RejectionReason { get; set; }
 
+        // Reason for termination (populated when Status = Terminated)
+        public string? TerminationReason { get; set; }
+
         // Secure token for email-based accept/reject actions (GUID, unique per appointment)
         [StringLength(100)]
         public string? ActionToken { get; set; }

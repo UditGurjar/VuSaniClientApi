@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -19,12 +20,14 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
         private readonly ApplicationDbContext _context;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public HseAppointmentRepository(ApplicationDbContext context, IEmailService emailService, IConfiguration configuration)
+        public HseAppointmentRepository(ApplicationDbContext context, IEmailService emailService, IConfiguration configuration, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _emailService = emailService;
             _configuration = configuration;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<object> GetHseAppointmentsAsync(int page, int pageSize, bool all, string search, string filter)
@@ -154,6 +157,13 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                     OrganizationName = x.organization?.Name,
                     DepartmentId = x.hse.DepartmentId,
                     DepartmentName = x.department?.Name,
+
+                    // Organization branding (full URLs for PDF/email)
+                    HeaderImage = BuildImageUrl(x.organization?.HeaderImage),
+                    FooterImage = BuildImageUrl(x.organization?.FooterImage),
+                    BusinessLogo = BuildImageUrl(x.organization?.BusinessLogo),
+                    PickColor = x.organization?.PickColor,
+                    FontSize = x.organization?.FontSize,
                     
                     // Signatures
                     AppointerDdrmId = x.hse.AppointerDdrmId,
@@ -165,6 +175,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                         ? HseAppointmentStatus.Expired
                         : x.hse.Status,
                     RejectionReason = x.hse.RejectionReason,
+                    TerminationReason = x.hse.TerminationReason,
                     RenewedFromId = x.hse.RenewedFromId,
 
                     // Agreement
@@ -297,6 +308,13 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                     OrganizationName = result.organization?.Name,
                     DepartmentId = result.hse.DepartmentId,
                     DepartmentName = result.department?.Name,
+
+                    // Organization branding (full URLs for PDF/email)
+                    HeaderImage = BuildImageUrl(result.organization?.HeaderImage),
+                    FooterImage = BuildImageUrl(result.organization?.FooterImage),
+                    BusinessLogo = BuildImageUrl(result.organization?.BusinessLogo),
+                    PickColor = result.organization?.PickColor,
+                    FontSize = result.organization?.FontSize,
                     
                     AppointerDdrmId = result.hse.AppointerDdrmId,
                     AppointedDdrmId = result.hse.AppointedDdrmId,
@@ -307,6 +325,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                         ? HseAppointmentStatus.Expired
                         : result.hse.Status,
                     RejectionReason = result.hse.RejectionReason,
+                    TerminationReason = result.hse.TerminationReason,
                     RenewedFromId = result.hse.RenewedFromId,
                     
                     AgreementId = result.hse.AgreementId,
@@ -419,7 +438,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                 // Insert activity log
                 await GeneralHelper.InsertActivityLogAsync(_context, userId, "create", "HSE Appointment", newAppointment.Id);
 
-                // Send email to appointed user with Accept/Reject action buttons
+                // Send "Pending Acceptance" notification emails to both appointed and appointer
                 try
                 {
                     var appointed = await _context.Users
@@ -427,39 +446,63 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                         .Select(u => new { u.Name, u.Surname, u.Email })
                         .FirstOrDefaultAsync();
 
+                    var appointer = await _context.Users
+                        .Where(u => u.Id == request.AppointsUserId)
+                        .Select(u => new { u.Name, u.Surname, u.Email, u.MyOrganization })
+                        .FirstOrDefaultAsync();
+
+                    var appointmentTypeName = request.NameOfAppointment.HasValue
+                        ? await _context.AppointmentTypes
+                            .Where(a => a.Id == request.NameOfAppointment.Value)
+                            .Select(a => a.Name)
+                            .FirstOrDefaultAsync() ?? ""
+                        : "";
+
+                    var organization = appointer?.MyOrganization.HasValue == true
+                        ? await _context.Organizations
+                            .Where(o => o.Id == appointer.MyOrganization.Value)
+                            .Select(o => new { o.Name, o.PickColor, o.FontSize })
+                            .FirstOrDefaultAsync()
+                        : null;
+
+                    var locationName = request.PhysicalLocation.HasValue
+                        ? await _context.Locations
+                            .Where(l => l.Id == request.PhysicalLocation.Value)
+                            .Select(l => l.Name)
+                            .FirstOrDefaultAsync() ?? ""
+                        : "";
+
+                    var appointerFullName = $"{appointer?.Name} {appointer?.Surname}".Trim();
+                    var appointedFullName = $"{appointed?.Name} {appointed?.Surname}".Trim();
+                    var effectiveDateStr = request.EffectiveDate.ToString("dd MMMM yyyy");
+                    var endDateStr = request.EndDate?.ToString("dd MMMM yyyy") ?? "";
+
+                    var frontendBaseUrl = _configuration["App:FrontendBaseUrl"] ?? "";
+                    var appointmentUrl = $"{frontendBaseUrl}/hse-appointment/{newAppointment.Id}";
+
+                    // Email to appointed (with action link)
                     if (!string.IsNullOrWhiteSpace(appointed?.Email))
                     {
-                        var appointer = await _context.Users
-                            .Where(u => u.Id == request.AppointsUserId)
-                            .Select(u => new { u.Name, u.Surname, u.MyOrganization })
-                            .FirstOrDefaultAsync();
+                        await _emailService.SendHseAppointmentNotificationEmailAsync(
+                            appointed.Email, appointedFullName, appointerFullName,
+                            appointmentTypeName, "Pending Acceptance",
+                            effectiveDateStr, endDateStr, locationName,
+                            appointmentUrl: appointmentUrl,
+                            brandColor: organization?.PickColor,
+                            fontFamily: organization?.FontSize);
+                    }
 
-                        var appointmentTypeName = request.NameOfAppointment.HasValue
-                            ? await _context.AppointmentTypes
-                                .Where(a => a.Id == request.NameOfAppointment.Value)
-                                .Select(a => a.Name)
-                                .FirstOrDefaultAsync() ?? ""
-                            : "";
-
-                        var companyName = appointer?.MyOrganization.HasValue == true
-                            ? await _context.Organizations
-                                .Where(o => o.Id == appointer.MyOrganization.Value)
-                                .Select(o => o.Name)
-                                .FirstOrDefaultAsync() ?? ""
-                            : "";
-
-                        var appointerFullName = $"{appointer?.Name} {appointer?.Surname}".Trim();
-                        var appointedFullName = $"{appointed.Name} {appointed.Surname}".Trim();
-                        var effectiveDateStr = request.EffectiveDate.ToString("dd MMMM yyyy");
-                        var endDateStr = request.EndDate?.ToString("dd MMMM yyyy") ?? "";
-
-                        var apiBaseUrl = _configuration["App:ApiBaseUrl"] ?? "";
-                        var frontendBaseUrl = _configuration["App:FrontendBaseUrl"] ?? "";
-
-                        await _emailService.SendHseAppointmentActionEmailAsync(
-                            appointed.Email, appointerFullName, appointedFullName,
-                            companyName, appointmentTypeName, effectiveDateStr, endDateStr,
-                            actionToken, apiBaseUrl, frontendBaseUrl);
+                    // Email to appointer (confirmation)
+                    if (!string.IsNullOrWhiteSpace(appointer?.Email))
+                    {
+                        await _emailService.SendHseAppointmentNotificationEmailAsync(
+                            appointer.Email, appointedFullName, appointerFullName,
+                            appointmentTypeName, "Pending Acceptance",
+                            effectiveDateStr, endDateStr, locationName,
+                            isAppointer: true,
+                            appointmentUrl: appointmentUrl,
+                            brandColor: organization?.PickColor,
+                            fontFamily: organization?.FontSize);
                     }
                 }
                 catch (Exception)
@@ -716,6 +759,12 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                     return new { status = false, message = "Rejection reason is required when rejecting an appointment" };
                 }
 
+                // Require termination reason when terminating
+                if (request.Status == HseAppointmentStatus.Terminated && string.IsNullOrWhiteSpace(request.TerminationReason))
+                {
+                    return new { status = false, message = "Termination reason is required when terminating an appointment" };
+                }
+
                 appointment.Status = request.Status;
                 appointment.UpdatedBy = userId;
                 appointment.UpdatedAt = DateTime.UtcNow;
@@ -724,6 +773,12 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                 if (request.Status == HseAppointmentStatus.Rejected)
                 {
                     appointment.RejectionReason = request.RejectionReason;
+                }
+
+                // Save termination reason
+                if (request.Status == HseAppointmentStatus.Terminated)
+                {
+                    appointment.TerminationReason = request.TerminationReason;
                 }
 
                 // Clear action token once the appointment is accepted or rejected
@@ -811,7 +866,7 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                 await GeneralHelper.InsertActivityLogAsync(_context, userId, "renewed", "HSE Appointment", original.Id);
                 await GeneralHelper.InsertActivityLogAsync(_context, userId, "create", "HSE Appointment", renewed.Id);
 
-                // Send action email to the appointed employee for the renewed appointment
+                // Send "Pending Acceptance" notification to appointed for the renewed appointment
                 try
                 {
                     var appointer = await _context.Users
@@ -831,25 +886,52 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                             .FirstOrDefaultAsync() ?? ""
                         : "";
 
-                    var companyName = appointer?.MyOrganization.HasValue == true
+                    var orgData = original.OrganizationId.HasValue
                         ? await _context.Organizations
-                            .Where(o => o.Id == appointer.MyOrganization.Value)
-                            .Select(o => o.Name)
+                            .Where(o => o.Id == original.OrganizationId.Value)
+                            .Select(o => new { o.Name, o.PickColor, o.FontSize })
+                            .FirstOrDefaultAsync()
+                        : null;
+
+                    var locationName = original.PhysicalLocation.HasValue
+                        ? await _context.Locations
+                            .Where(l => l.Id == original.PhysicalLocation.Value)
+                            .Select(l => l.Name)
                             .FirstOrDefaultAsync() ?? ""
                         : "";
 
+                    var appointerFullName = $"{appointer?.Name} {appointer?.Surname}".Trim();
+                    var appointedFullName = $"{appointed?.Name} {appointed?.Surname}".Trim();
+                    var frontendBaseUrl = _configuration["App:FrontendBaseUrl"] ?? "";
+                    var appointmentUrl = $"{frontendBaseUrl}/hse-appointment/{renewed.Id}";
+
+                    // Email to appointed (Pending Acceptance for renewed appointment)
                     if (!string.IsNullOrWhiteSpace(appointed?.Email))
                     {
-                        var apiBaseUrl = _configuration["App:ApiBaseUrl"] ?? "";
-                        var frontendBaseUrl = _configuration["App:FrontendBaseUrl"] ?? "";
-                        await _emailService.SendHseAppointmentActionEmailAsync(
-                            appointed.Email,
-                            $"{appointer?.Name} {appointer?.Surname}".Trim(),
-                            $"{appointed.Name} {appointed.Surname}".Trim(),
-                            companyName, appointmentTypeName,
+                        await _emailService.SendHseAppointmentNotificationEmailAsync(
+                            appointed.Email, appointedFullName, appointerFullName,
+                            appointmentTypeName, "Pending Acceptance",
                             renewed.EffectiveDate?.ToString("dd MMMM yyyy") ?? "",
                             renewed.EndDate?.ToString("dd MMMM yyyy") ?? "",
-                            renewed.ActionToken!, apiBaseUrl, frontendBaseUrl);
+                            locationName,
+                            appointmentUrl: appointmentUrl,
+                            brandColor: orgData?.PickColor,
+                            fontFamily: orgData?.FontSize);
+                    }
+
+                    // Email to appointer (confirmation of renewal)
+                    if (!string.IsNullOrWhiteSpace(appointer?.Email))
+                    {
+                        await _emailService.SendHseAppointmentNotificationEmailAsync(
+                            appointer.Email, appointedFullName, appointerFullName,
+                            appointmentTypeName, "Pending Acceptance",
+                            renewed.EffectiveDate?.ToString("dd MMMM yyyy") ?? "",
+                            renewed.EndDate?.ToString("dd MMMM yyyy") ?? "",
+                            locationName,
+                            isAppointer: true,
+                            appointmentUrl: appointmentUrl,
+                            brandColor: orgData?.PickColor,
+                            fontFamily: orgData?.FontSize);
                     }
                 }
                 catch (Exception)
@@ -897,6 +979,91 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
 
                 // Send status change emails
                 await SendStatusChangeEmailsAsync(appointment, "Active");
+
+                // Generate PDF and send appointment letter to the appointed employee
+                try
+                {
+                    var appointer = await _context.Users
+                        .Where(u => u.Id == appointment.AppointsUserId)
+                        .Select(u => new { u.Name, u.Surname })
+                        .FirstOrDefaultAsync();
+
+                    var appointed = await _context.Users
+                        .Where(u => u.Id == appointment.AppointedUserId)
+                        .Select(u => new { u.Name, u.Surname, u.Email })
+                        .FirstOrDefaultAsync();
+
+                    var appointmentType = appointment.NameOfAppointment.HasValue
+                        ? await _context.AppointmentTypes
+                            .Where(a => a.Id == appointment.NameOfAppointment.Value)
+                            .Select(a => new { a.Name, a.Designated })
+                            .FirstOrDefaultAsync()
+                        : null;
+
+                    var organization = appointment.OrganizationId.HasValue
+                        ? await _context.Organizations
+                            .Where(o => o.Id == appointment.OrganizationId.Value)
+                            .Select(o => new { o.Name, o.HeaderImage, o.FooterImage, o.BusinessLogo, o.PickColor, o.FontSize })
+                            .FirstOrDefaultAsync()
+                        : null;
+
+                    var appointerRole = await _context.Users
+                        .Where(u => u.Id == appointment.AppointsUserId)
+                        .Join(_context.Roles, u => u.RoleId, r => r.Id, (u, r) => r.Name)
+                        .FirstOrDefaultAsync();
+
+                    var appointerFullName = $"{appointer?.Name} {appointer?.Surname}".Trim();
+                    var appointedFullName = $"{appointed?.Name} {appointed?.Surname}".Trim();
+                    var appointmentTypeName = appointmentType?.Name ?? "";
+
+                    // Generate PDF with organization branding from wwwroot/Logo
+                    var webRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                    var pdfData = new HseAppointmentPdfData
+                    {
+                        AppointerFullName = appointerFullName,
+                        AppointerRoleName = appointerRole ?? "",
+                        AppointedFullName = appointedFullName,
+                        AppointmentTypeName = appointmentTypeName,
+                        EffectiveDate = appointment.EffectiveDate?.ToString("dd-MM-yyyy") ?? "",
+                        EndDate = appointment.EndDate?.ToString("dd-MM-yyyy") ?? "",
+                        OrganizationName = organization?.Name ?? "",
+                        Designated = DecodeHelper.DecodeSingle(appointmentType?.Designated),
+                        HeaderImage = organization?.HeaderImage,
+                        FooterImage = organization?.FooterImage,
+                        BusinessLogo = organization?.BusinessLogo,
+                        WebRootPath = webRootPath,
+                        BrandColor = organization?.PickColor,
+                        FontFamily = organization?.FontSize
+                    };
+
+                    var pdfBytes = HseAppointmentPdfHelper.GenerateAppointmentLetterPdf(pdfData);
+
+                    var locationName = appointment.PhysicalLocation.HasValue
+                        ? await _context.Locations
+                            .Where(l => l.Id == appointment.PhysicalLocation.Value)
+                            .Select(l => l.Name)
+                            .FirstOrDefaultAsync() ?? ""
+                        : "";
+
+                    var effectiveDateStr = appointment.EffectiveDate?.ToString("dd MMMM yyyy") ?? "";
+                    var endDateStr = appointment.EndDate?.ToString("dd MMMM yyyy") ?? "";
+
+                    // Send "Active" notification with PDF attachment to appointed employee
+                    if (!string.IsNullOrWhiteSpace(appointed?.Email))
+                    {
+                        await _emailService.SendHseAppointmentNotificationEmailAsync(
+                            appointed.Email, appointedFullName, appointerFullName,
+                            appointmentTypeName, "Active",
+                            effectiveDateStr, endDateStr, locationName,
+                            brandColor: organization?.PickColor,
+                            fontFamily: organization?.FontSize,
+                            pdfAttachment: pdfBytes);
+                    }
+                }
+                catch (Exception)
+                {
+                    // PDF/email failure should not fail the accept operation
+                }
 
                 return new { status = true, message = "HSE Appointment accepted successfully." };
             }
@@ -966,26 +1133,79 @@ namespace VuSaniClientApi.Infrastructure.Repositories.HseAppointmentRepository
                         .FirstOrDefaultAsync() ?? ""
                     : "";
 
-                var appointedFullName = $"{appointed?.Name} {appointed?.Surname}".Trim();
+                // Fetch organization branding for email styling
+                var orgBranding = appointment.OrganizationId.HasValue
+                    ? await _context.Organizations
+                        .Where(o => o.Id == appointment.OrganizationId.Value)
+                        .Select(o => new { o.PickColor, o.FontSize })
+                        .FirstOrDefaultAsync()
+                    : null;
 
+                // Fetch location name
+                var locationName = appointment.PhysicalLocation.HasValue
+                    ? await _context.Locations
+                        .Where(l => l.Id == appointment.PhysicalLocation.Value)
+                        .Select(l => l.Name)
+                        .FirstOrDefaultAsync() ?? ""
+                    : "";
+
+                var appointerFullName = $"{appointer?.Name} {appointer?.Surname}".Trim();
+                var appointedFullName = $"{appointed?.Name} {appointed?.Surname}".Trim();
+                var effectiveDateStr = appointment.EffectiveDate?.ToString("dd MMMM yyyy") ?? "";
+                var endDateStr = appointment.EndDate?.ToString("dd MMMM yyyy") ?? "";
+
+                var frontendBaseUrl = _configuration["App:FrontendBaseUrl"] ?? "";
+                var appointmentUrl = $"{frontendBaseUrl}/hse-appointment/{appointment.Id}";
+
+                // Send notification to appointer (appointer template)
                 if (!string.IsNullOrWhiteSpace(appointer?.Email))
                 {
-                    await _emailService.SendHseAppointmentStatusChangeEmailAsync(
-                        appointer.Email, $"{appointer.Name} {appointer.Surname}".Trim(),
-                        appointmentTypeName, appointedFullName, newStatus);
+                    await _emailService.SendHseAppointmentNotificationEmailAsync(
+                        appointer.Email, appointedFullName, appointerFullName,
+                        appointmentTypeName, newStatus,
+                        effectiveDateStr, endDateStr, locationName,
+                        isAppointer: true,
+                        appointmentUrl: appointmentUrl,
+                        rejectionReason: appointment.RejectionReason,
+                        terminationReason: appointment.TerminationReason,
+                        brandColor: orgBranding?.PickColor,
+                        fontFamily: orgBranding?.FontSize);
                 }
 
+                // Send notification to appointed (appointed template)
                 if (!string.IsNullOrWhiteSpace(appointed?.Email))
                 {
-                    await _emailService.SendHseAppointmentStatusChangeEmailAsync(
-                        appointed.Email, appointedFullName,
-                        appointmentTypeName, appointedFullName, newStatus);
+                    await _emailService.SendHseAppointmentNotificationEmailAsync(
+                        appointed.Email, appointedFullName, appointerFullName,
+                        appointmentTypeName, newStatus,
+                        effectiveDateStr, endDateStr, locationName,
+                        appointmentUrl: appointmentUrl,
+                        rejectionReason: appointment.RejectionReason,
+                        terminationReason: appointment.TerminationReason,
+                        brandColor: orgBranding?.PickColor,
+                        fontFamily: orgBranding?.FontSize);
                 }
             }
             catch (Exception)
             {
                 // Email failure should not break the flow
             }
+        }
+
+        /// <summary>
+        /// Builds a full image URL from a relative path (e.g. "/Logo/Org1HeaderLogo.jpg")
+        /// using the current HTTP request's scheme and host.
+        /// </summary>
+        private string? BuildImageUrl(string? relativePath)
+        {
+            if (string.IsNullOrWhiteSpace(relativePath))
+                return null;
+
+            var request = _httpContextAccessor.HttpContext?.Request;
+            if (request == null)
+                return relativePath;
+
+            return $"{request.Scheme}://{request.Host}{relativePath}";
         }
 
         private static bool TryGetIntFromElement(JsonElement element, out int value)

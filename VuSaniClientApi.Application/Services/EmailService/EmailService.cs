@@ -2,12 +2,15 @@ using Microsoft.Extensions.Configuration;
 using MimeKit;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using System.Text.RegularExpressions;
 using MailKit.Net.Smtp;
 using System.Threading.Tasks;
+using ContentType = MimeKit.ContentType;
 using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
 namespace VuSaniClientApi.Application.Services.EmailService
@@ -20,6 +23,7 @@ namespace VuSaniClientApi.Application.Services.EmailService
         {
             _configuration = configuration;
         }
+
         public async Task SendEmailUsingGmail(string sender, List<string> to, string subject, string body)
         {
             try
@@ -41,18 +45,13 @@ namespace VuSaniClientApi.Application.Services.EmailService
                 emailMessage.Body = new TextPart("html") { Text = body };
 
                 using var smtp = new SmtpClient();
-                // Connect to the SMTP server
                 await smtp.ConnectAsync(host, port, MailKit.Security.SecureSocketOptions.StartTls);
-                // Authenticate using App Password
                 await smtp.AuthenticateAsync(fromEmail, password);
-                // Send the email
                 await smtp.SendAsync(emailMessage);
-                // Disconnect gracefully
                 await smtp.DisconnectAsync(true);
             }
             catch (Exception ex)
             {
-                // Log the exception or throw
                 Console.WriteLine($"Error sending email: {ex.Message}");
                 throw;
             }
@@ -81,56 +80,6 @@ This is an automated message from VuSani Employee Management.
 ".Trim();
 
            // await SendEmailUsingGmail(toEmail, subject, body);
-        }
-
-        public async Task SendHseAppointmentAppointerEmailAsync(
-            string toEmail,
-            string appointerName,
-            string appointedEmployeeName,
-            string companyName,
-            string hseAppointmentName,
-            string effectiveDate,
-            string endDate)
-        {
-            if (string.IsNullOrWhiteSpace(toEmail)) return;
-
-            var subject = $"Confirmation: HSE Appointment - {appointedEmployeeName}";
-            var body = BuildHseAppointmentEmailBody(
-                "HSE Appointment Confirmation",
-                appointerName,
-                appointedEmployeeName,
-                companyName,
-                hseAppointmentName,
-                effectiveDate,
-                endDate,
-                "You have been recorded as the <strong>Appointer</strong> for the following HSE Legal Appointment.");
-
-            //await SendEmailAsync(toEmail, subject, body, isHtml: true);
-        }
-
-        public async Task SendHseAppointmentAppointedEmailAsync(
-            string toEmail,
-            string appointerName,
-            string appointedEmployeeName,
-            string companyName,
-            string hseAppointmentName,
-            string effectiveDate,
-            string endDate)
-        {
-            if (string.IsNullOrWhiteSpace(toEmail)) return;
-
-            var subject = $"HSE Appointment Notification - {hseAppointmentName}";
-            var body = BuildHseAppointmentEmailBody(
-                "HSE Appointment Notification",
-                appointerName,
-                appointedEmployeeName,
-                companyName,
-                hseAppointmentName,
-                effectiveDate,
-                endDate,
-                "You have been <strong>appointed</strong> for the following HSE Legal Appointment.");
-
-         //   await SendEmailAsync(toEmail, subject, body, isHtml: true);
         }
 
         public async Task SendHseAppointmentEndDateReminderAsync(
@@ -192,169 +141,129 @@ This is an automated message from VuSani Employee Management.
             //await SendEmailAsync(toEmail, subject, body, isHtml: true);
         }
 
-        public async Task SendHseAppointmentStatusChangeEmailAsync(
+        /// <summary>
+        /// Unified HSE Appointment notification email.
+        /// Uses the appointed template by default, or the appointer template when isAppointer = true.
+        /// Handles all statuses and optionally attaches a PDF.
+        /// </summary>
+        public async Task SendHseAppointmentNotificationEmailAsync(
             string toEmail,
-            string recipientName,
+            string appointedName,
+            string appointerName,
             string hseAppointmentName,
-            string appointedEmployeeName,
-            string newStatus)
+            string status,
+            string effectiveDate,
+            string endDate,
+            string locationName,
+            bool isAppointer = false,
+            string? appointmentUrl = null,
+            string? rejectionReason = null,
+            string? terminationReason = null,
+            string? brandColor = null,
+            string? fontFamily = null,
+            byte[]? pdfAttachment = null)
         {
             if (string.IsNullOrWhiteSpace(toEmail)) return;
 
-            var statusColor = newStatus switch
-            {
-                "Active" => "#28a745",
-                "Rejected" => "#dc3545",
-                "Terminated" => "#6c757d",
-                "Renewed" => "#17a2b8",
-                _ => "#333"
-            };
+            // Select template based on recipient type
+            var templateFileName = isAppointer
+                ? "HseAppointmentAppointerNotification.txt"
+                : "HseAppointmentNotification.txt";
 
-            var statusMessage = newStatus switch
-            {
-                "Active" => "has been <strong>accepted</strong> and is now active",
-                "Rejected" => "has been <strong>rejected</strong>",
-                "Terminated" => "has been <strong>terminated</strong>",
-                "Renewed" => "has been <strong>renewed</strong>. A new appointment record has been created with Pending Acceptance status",
-                _ => $"status has been changed to <strong>{newStatus}</strong>"
-            };
-
-            var subject = $"HSE Appointment {newStatus}: {hseAppointmentName} - {appointedEmployeeName}";
-            var body = $@"
-<!DOCTYPE html>
-<html>
-<head><meta charset='utf-8'></head>
-<body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
-    <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
-        <div style='background-color: #e2e3e5; border-radius: 8px; padding: 20px; margin-bottom: 20px;'>
-            <h2 style='color: #383d41; margin-top: 0;'>HSE Appointment Status Update</h2>
-            <span style='display: inline-block; background-color: {statusColor}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 14px;'>{newStatus}</span>
-        </div>
-
-        <p>Dear {recipientName},</p>
-
-        <p>The HSE Appointment for <strong>{appointedEmployeeName}</strong> ({hseAppointmentName}) {statusMessage}.</p>
-
-        <p>Please log in to the system to view the details.</p>
-
-        <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;' />
-        <p style='font-size: 12px; color: #6c757d;'>This is an automated message from VuSani Employee Management.</p>
-    </div>
-</body>
-</html>".Trim();
-
-            //await SendEmailAsync(toEmail, subject, body, isHtml: true);
-        }
-
-        public async Task SendHseAppointmentActionEmailAsync(
-       string toEmail,
-       string appointerName,
-       string appointedEmployeeName,
-       string companyName,
-       string hseAppointmentName,
-       string effectiveDate,
-       string endDate,
-       string actionToken,
-       string apiBaseUrl,
-       string frontendBaseUrl)
-        {
-            if (string.IsNullOrWhiteSpace(toEmail))
-                return;
-
-            var acceptUrl = $"{apiBaseUrl}/api/HseAppointment/email-accept?token={actionToken}";
-            var rejectUrl = $"{apiBaseUrl}/api/HseAppointment/email-reject?token={actionToken}";
-
-            var subject = $"Action Required: HSE Appointment - {hseAppointmentName}";
-
-            // Path to template
-            string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "EmailTextFile", "HseAppointedEmployee.txt");
-
+            string templatePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "EmailTextFile", templateFileName);
             if (!File.Exists(templatePath))
                 throw new FileNotFoundException("Email template not found.", templatePath);
 
             var body = await File.ReadAllTextAsync(templatePath);
-            string senderName = "VuSani";
 
-            // Replace placeholders
-            body = body.Replace("{{AppointedEmployeeName}}", appointedEmployeeName)
+            // Defaults for branding
+            var color = string.IsNullOrWhiteSpace(brandColor) ? "#6C1D45" : brandColor;
+            var font = string.IsNullOrWhiteSpace(fontFamily) ? "Arial" : fontFamily;
+            var applicationName = _configuration["App:ApplicationName"] ?? "VuSani";
+
+            // Status color mapping
+            var statusColor = status switch
+            {
+                "Pending Acceptance" => "#f57c00",
+                "Active" => "#28a745",
+                "Rejected" => "#dc3545",
+                "Expired" => "#856404",
+                "Renewed" => "#17a2b8",
+                "Terminated" => "#6c757d",
+                _ => "#333"
+            };
+
+            // Replace all placeholders
+            body = body.Replace("{{AppointedName}}", appointedName)
                        .Replace("{{AppointerName}}", appointerName)
-                       .Replace("{{CompanyName}}", companyName)
                        .Replace("{{HseAppointmentName}}", hseAppointmentName)
-                       .Replace("{{EffectiveDate}}", effectiveDate)
+                       .Replace("{{HseAppointmentStatus}}", status)
+                       .Replace("{{EffectiveDate}}", string.IsNullOrEmpty(effectiveDate) ? "N/A" : effectiveDate)
                        .Replace("{{EndDate}}", string.IsNullOrEmpty(endDate) ? "N/A" : endDate)
-                       .Replace("{{AcceptUrl}}", acceptUrl)
-                       .Replace("{{RejectUrl}}", rejectUrl)
-                       .Replace("{{SenderName}}", appointerName)
+                       .Replace("{{LocationName}}", string.IsNullOrEmpty(locationName) ? "N/A" : locationName)
+                       .Replace("{{AppointmentUrl}}", appointmentUrl ?? "#")
+                       .Replace("{{RejectionReason}}", rejectionReason ?? "N/A")
+                       .Replace("{{TerminationReason}}", terminationReason ?? "N/A")
+                       .Replace("{{BrandColor}}", color)
+                       .Replace("{{FontFamily}}", font)
+                       .Replace("{{StatusColor}}", statusColor)
+                       .Replace("{{ApplicationName}}", applicationName)
                        .Replace("{{CurrentYear}}", DateTime.UtcNow.Year.ToString());
-            List<string> toEmails = new List<string> { toEmail };
 
-            await SendEmailUsingGmail(senderName, toEmails, subject, body);
+            // Process conditional blocks - keep matching status, remove others
+            var allStatuses = new[] { "Pending Acceptance", "Active", "Rejected", "Expired", "Renewed", "Terminated" };
+            foreach (var s in allStatuses)
+            {
+                if (s == status)
+                {
+                    // Keep the content, remove the markers
+                    body = body.Replace($"<!--IF:{s}-->", "").Replace($"<!--ENDIF:{s}-->", "");
+                }
+                else
+                {
+                    // Remove the entire block including markers
+                    var pattern = $"<!--IF:{Regex.Escape(s)}-->.*?<!--ENDIF:{Regex.Escape(s)}-->";
+                    body = Regex.Replace(body, pattern, "", RegexOptions.Singleline);
+                }
+            }
+
+            var subject = $"HSE Appointment {status}: {hseAppointmentName}";
+
+            string fromEmail = _configuration["SettingsSection:EmailAddress"] ?? "";
+            string password = _configuration["SettingsSection:password"] ?? "";
+            string host = _configuration["SettingsSection:Host"] ?? "";
+            int port = Convert.ToInt32(_configuration["SettingsSection:Port"] ?? "587");
+
+            try
+            {
+                var emailMessage = new MimeMessage();
+                emailMessage.From.Add(new MailboxAddress(applicationName, fromEmail));
+                emailMessage.To.Add(MailboxAddress.Parse(toEmail));
+                emailMessage.Subject = subject;
+
+                if (pdfAttachment != null && pdfAttachment.Length > 0)
+                {
+                    // Build body with PDF attachment
+                    var builder = new BodyBuilder { HtmlBody = body };
+                    builder.Attachments.Add("HSE_Appointment_Letter.pdf", pdfAttachment, new ContentType("application", "pdf"));
+                    emailMessage.Body = builder.ToMessageBody();
+                }
+                else
+                {
+                    emailMessage.Body = new TextPart("html") { Text = body };
+                }
+
+                using var smtp = new SmtpClient();
+                await smtp.ConnectAsync(host, port, MailKit.Security.SecureSocketOptions.StartTls);
+                await smtp.AuthenticateAsync(fromEmail, password);
+                await smtp.SendAsync(emailMessage);
+                await smtp.DisconnectAsync(true);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending HSE notification email: {ex.Message}");
+                throw;
+            }
         }
-
-
-        #region Private Helpers
-
- 
-        private static string BuildHseAppointmentEmailBody(
-            string title,
-            string appointerName,
-            string appointedEmployeeName,
-            string companyName,
-            string hseAppointmentName,
-            string effectiveDate,
-            string endDate,
-            string introMessage)
-        {
-            return $@"
-<!DOCTYPE html>
-<html>
-<head><meta charset='utf-8'></head>
-<body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
-    <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
-        <div style='background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 20px; margin-bottom: 20px;'>
-            <h2 style='color: #155724; margin-top: 0;'>{title}</h2>
-        </div>
-
-        <p>Dear {appointerName},</p>
-
-        <p>{introMessage}</p>
-
-        <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
-            <tr>
-                <td style='padding: 10px; border: 1px solid #ddd; background: #f8f9fa; font-weight: bold; width: 40%;'>Company</td>
-                <td style='padding: 10px; border: 1px solid #ddd;'>{companyName}</td>
-            </tr>
-            <tr>
-                <td style='padding: 10px; border: 1px solid #ddd; background: #f8f9fa; font-weight: bold;'>HSE Appointment Name</td>
-                <td style='padding: 10px; border: 1px solid #ddd;'>{hseAppointmentName}</td>
-            </tr>
-            <tr>
-                <td style='padding: 10px; border: 1px solid #ddd; background: #f8f9fa; font-weight: bold;'>Appointer</td>
-                <td style='padding: 10px; border: 1px solid #ddd;'>{appointerName}</td>
-            </tr>
-            <tr>
-                <td style='padding: 10px; border: 1px solid #ddd; background: #f8f9fa; font-weight: bold;'>Appointed Employee</td>
-                <td style='padding: 10px; border: 1px solid #ddd;'>{appointedEmployeeName}</td>
-            </tr>
-            <tr>
-                <td style='padding: 10px; border: 1px solid #ddd; background: #f8f9fa; font-weight: bold;'>Effective Date</td>
-                <td style='padding: 10px; border: 1px solid #ddd;'>{effectiveDate}</td>
-            </tr>
-            <tr>
-                <td style='padding: 10px; border: 1px solid #ddd; background: #f8f9fa; font-weight: bold;'>End Date</td>
-                <td style='padding: 10px; border: 1px solid #ddd;'>{(string.IsNullOrEmpty(endDate) ? "N/A" : endDate)}</td>
-            </tr>
-        </table>
-
-        <p>Please log in to the system to view the full appointment details.</p>
-
-        <hr style='border: none; border-top: 1px solid #ddd; margin: 20px 0;' />
-        <p style='font-size: 12px; color: #6c757d;'>This is an automated message from VuSani Employee Management.</p>
-    </div>
-</body>
-</html>".Trim();
-        }
-
-        #endregion
     }
 }

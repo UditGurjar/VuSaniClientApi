@@ -16,30 +16,6 @@ namespace VuSaniClientApi.Infrastructure.Services.EmailService
         Task SendTerminationReminderAsync(string toEmail, string employeeName, DateTime terminationDate, int intervalDays);
 
         /// <summary>
-        /// Sends an HSE Appointment confirmation email to the appointer.
-        /// </summary>
-        Task SendHseAppointmentAppointerEmailAsync(
-            string toEmail,
-            string appointerName,
-            string appointedEmployeeName,
-            string companyName,
-            string hseAppointmentName,
-            string effectiveDate,
-            string endDate);
-
-        /// <summary>
-        /// Sends an HSE Appointment notification email to the appointed user.
-        /// </summary>
-        Task SendHseAppointmentAppointedEmailAsync(
-            string toEmail,
-            string appointerName,
-            string appointedEmployeeName,
-            string companyName,
-            string hseAppointmentName,
-            string effectiveDate,
-            string endDate);
-
-        /// <summary>
         /// Sends an HSE Appointment end date reminder email.
         /// </summary>
         Task SendHseAppointmentEndDateReminderAsync(
@@ -51,28 +27,25 @@ namespace VuSaniClientApi.Infrastructure.Services.EmailService
             int daysRemaining);
 
         /// <summary>
-        /// Sends an HSE Appointment status change notification email.
+        /// Unified HSE Appointment notification email.
+        /// Uses HseAppointmentNotification.txt for appointed, HseAppointmentAppointerNotification.txt for appointer.
+        /// Handles all statuses: Pending Acceptance, Active, Rejected, Expired, Renewed, Terminated.
         /// </summary>
-        Task SendHseAppointmentStatusChangeEmailAsync(
+        Task SendHseAppointmentNotificationEmailAsync(
             string toEmail,
-            string recipientName,
-            string hseAppointmentName,
-            string appointedEmployeeName,
-            string newStatus);
-
-        /// <summary>
-        /// Sends an HSE Appointment action email to the appointed employee with Accept/Reject buttons.
-        /// </summary>
-        Task SendHseAppointmentActionEmailAsync(
-            string toEmail,
+            string appointedName,
             string appointerName,
-            string appointedEmployeeName,
-            string companyName,
             string hseAppointmentName,
+            string status,
             string effectiveDate,
             string endDate,
-            string actionToken,
-            string apiBaseUrl,
-            string frontendBaseUrl);
+            string locationName,
+            bool isAppointer = false,
+            string? appointmentUrl = null,
+            string? rejectionReason = null,
+            string? terminationReason = null,
+            string? brandColor = null,
+            string? fontFamily = null,
+            byte[]? pdfAttachment = null);
     }
 }

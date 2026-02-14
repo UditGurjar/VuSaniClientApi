@@ -103,12 +103,11 @@ using (var scope = app.Services.CreateScope())
         throw;
     }
 }
+app.UseHttpsRedirection();
+app.UseCors("AllowReactApp");  
 app.UseStaticFiles();
 
-app.UseHttpsRedirection();
-app.UseCors("AllowReactApp");   // ✅ ADD THIS LINE
-
-app.UseAuthentication();   // 👈 must be before UseAuthorization
+app.UseAuthentication();  
 app.UseAuthorization();
 app.MapControllers();
 

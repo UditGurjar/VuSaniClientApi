@@ -86,6 +86,13 @@ namespace VuSaniClientApi.Models.DTOs
         public int? DepartmentId { get; set; }
         public string? DepartmentName { get; set; }
 
+        // Organization branding (for PDF/email)
+        public string? HeaderImage { get; set; }
+        public string? FooterImage { get; set; }
+        public string? BusinessLogo { get; set; }
+        public string? PickColor { get; set; }
+        public string? FontSize { get; set; }
+
         // Signature fields
         public int? AppointerDdrmId { get; set; }
         public string? AppointerSignatureUrl { get; set; }
@@ -96,6 +103,7 @@ namespace VuSaniClientApi.Models.DTOs
         // Status
         public HseAppointmentStatus? Status { get; set; }
         public string? RejectionReason { get; set; }
+        public string? TerminationReason { get; set; }
         public int? RenewedFromId { get; set; }
 
         // Agreement fields
@@ -144,6 +152,11 @@ namespace VuSaniClientApi.Models.DTOs
         /// Required when Status = Rejected. The reason for rejection.
         /// </summary>
         public string? RejectionReason { get; set; }
+
+        /// <summary>
+        /// Required when Status = Terminated. The reason for termination.
+        /// </summary>
+        public string? TerminationReason { get; set; }
     }
 
     /// <summary>

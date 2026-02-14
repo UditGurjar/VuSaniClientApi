@@ -18,7 +18,7 @@ namespace VuSaniClientApi.Infrastructure.DBContext.Seed
     {
         Id = 1,
         ParentId = null,   // ✅ ROOT MUST BE NULL
-        Name = "Harmony and Motors",
+        Name = "Harmony and Help Group",
         Description = "<p>Corporate Office</p>",
         Level = 1,
          
@@ -26,10 +26,10 @@ namespace VuSaniClientApi.Infrastructure.DBContext.Seed
         CreatedBy = 1,
         UpdatedAt = DateTime.Parse("2025-08-11 10:03:30"),
         UpdatedBy = 1,
-        BusinessLogo = "https://saapi.vusani360.africa/main_logo.png",
-        BackgroundImage = "https://saapi.vusani360.africa/main_logo.png",
-        HeaderImage = "https://saapi.vusani360.africa/main_logo.png",
-        FooterImage = "https://saapi.vusani360.africa/main_logo.png",
+        BusinessLogo = "/Logo/Org1HeaderLogo.jpg",
+        BackgroundImage = "/Logo/Org1HeaderLogo.jpg",
+        HeaderImage = "/Logo/Org1HeaderLogo.jpg",
+        FooterImage = "/Logo/Org1HeaderLogo.jpg",
         FontSize = "16",
         PickColor = "#45c421",
         UniqueId = "H&HG/2425/001",
@@ -50,7 +50,7 @@ namespace VuSaniClientApi.Infrastructure.DBContext.Seed
         UpdatedBy = 1,
         BusinessLogo = "https://harmonyandmotors-api.vusani360.africa/org1.png",
         BackgroundImage = "https://harmonyandmotors-api.vusani360.africa/org1.png",
-        HeaderImage = "https://harmonyandmotors-api.vusani360.africa/org1.png",
+        HeaderImage = "/Logo/Org2HeaderLogo.jpg",
         FooterImage = "https://harmonyandmotors-api.vusani360.africa/org1.png",
         FontSize = "16",
         PickColor = "#6c1d45",
@@ -62,7 +62,7 @@ namespace VuSaniClientApi.Infrastructure.DBContext.Seed
     {
         Id = 3,
         ParentId = 1,
-        Name = "Harmony and Academy",
+        Name = "Harmony and Help Academy",
         Description = "<p>Academy division</p>",
         Level = 1,
          
